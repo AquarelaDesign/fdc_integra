@@ -1,0 +1,114 @@
+{
+  "Parametros": {
+    "ODBC_Nome": "ReiCarb",
+    "Login": "contato@reidoscaburadores.com.br",
+    "TipoDB": "ACCESS",
+    "TimeZone": "America/Sao_Paulo",
+    "Servidor": "http://siare08.procyon.com.br",
+    "Porta": "3125",
+    "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
+    "Implantacao": 1,
+    "Saida": "Texto",
+    "RegPorVez": 250,
+    "SalvaLogs": "false",
+    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 1,
+    "Periodo": 5,
+    "Tempo": 0.1,
+    "Proxy": {
+      "UsaProxy": "false",
+      "ServidorP": "proxy.procyon.com.br",
+      "PortaP": "3128",
+      "Usuario": "jose",
+      "Senha": "Ze270972"
+    },
+    "Passagens": {
+      "Tabela": "orçamento",
+      "Campos": {
+        "idipas": "n_orçamento",
+        "placa": "placa",
+        "dtpsg": "data",
+        "km": "km",
+        "descri": "veículo tipo",
+        "corvei": "veículo cor",
+        "nome": "cliente",
+        "cgccpf": "CGC",
+        "iestad": "IE",
+        "e_mail": "EMAIL",
+        "fone": "telefone",
+        "endere": "endereço",
+        "cidade": "Cidade",
+        "bairro": "Bairro",
+        "cep": "CEP",
+        "comp": "COMPLEMENTO",
+        "fech": "realizado"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "realizado",
+        "Operador": "=",
+        "Valor": 1,
+        "OpLogico": "AND"
+      },{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "placa",
+        "Operador": "<>",
+        "Valor": "",
+        "OpLogico": "AND"
+      },{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "placa",
+        "Operador": "<>",
+        "Valor": "NULL",
+        "OpLogico": "AND"
+      },{
+        "Tipo": "F",
+        "Funcao": "len",
+        "Campo": "placa",
+        "Operador": "=",
+        "Valor": "7",
+        "OpLogico": "AND"
+      }],
+      "Ordem": ["data","n_orçamento"]
+    },
+    "Servicos": {
+      "Tabela": "ORÇAMENTOSUBMO",
+      "Campos": {
+        "codser": "código",
+        "descri": "peça",
+        "quant": "qte",
+        "valor": "preço"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "id_do_pedido",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Pecas": {
+      "Tabela": "orçamentosub",
+      "Campos": {
+        "codpec": "código",
+        "descri": "peça",
+        "quant": "qte",
+        "valor": "preço"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "id_do_pedido",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    }
+  }
+}

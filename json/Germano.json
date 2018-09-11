@@ -1,0 +1,124 @@
+{
+  "Parametros": {
+    "ODBC_Nome": "Germano",
+    "Login": "mecanica_germano@ig.com.br",
+    "TipoDB": "DBASE",
+    "TimeZone": "America/Sao_Paulo",
+    "Servidor": "http://siare08.procyon.com.br",
+    "Porta": "3125",
+    "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
+    "Implantacao": 1,
+    "Saida": "Texto",
+    "RegPorVez": 250,
+    "SalvaLogs": "false",
+    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 0,
+    "Periodo": 5,
+    "Tempo": 0.1,
+    "Proxy": {
+      "UsaProxy": "false",
+      "ServidorP": "proxy.procyon.com.br",
+      "PortaP": "3128",
+      "Usuario": "jose",
+      "Senha": "Ze270972"
+    },
+    "Passagens": {
+      "Tabela": "ORDENS",
+      "Campos": {
+        "idipas": "NUMERO",
+        "dtpsg": "DATA",
+        "km": "OBSERVACAO",
+        "fech": "SITUACOES",
+        "nome": "CLIENTE",
+        "idtipo": "S"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "SITUACOES",
+        "Operador": "=",
+        "Valor": "Encerrada",
+        "OpLogico": ""
+      }],
+      "Ordem": ["DATA","NUMERO"]
+    },
+    "Servicos": {
+      "Tabela": "ItemServ",
+      "Campos": {
+        "descri": "DESCRICAO",
+        "quant": "QUANTIDADE",
+        "valor": "VALORUNIT"
+      },
+      "Condicao": [{
+        "Tipo": "S",
+        "Funcao": "",
+        "Campo": "NUMEROOS",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Pecas": {
+      "Tabela": "ItemPeca",
+      "Campos": {
+        "codpec": "CODIGO",
+        "descri": "DESCRICAO",
+        "quant": "QUANTIDADE",
+        "valor": "VALORUNIT"
+      },
+      "Condicao": [{
+        "Tipo": "S",
+        "Funcao": "",
+        "Campo": "NUMEROOS",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Veiculos": {
+      "Tabela": "ITEMOBJE",
+      "Campos": {
+        "placa": "IDENTIFIC3",
+        "descri": "IDENTIFIC1",
+        "anofab": "IDENTIFIC2"
+      },
+      "Condicao": [{
+        "Tipo": "S",
+        "Funcao": "",
+        "Campo": "NUMEROOS",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Clientes": {
+      "Tabela": "CLIENTES",
+      "Campos": {
+        "cgccpf": "CGC",
+        "nome": "NOME",
+        "endere": "ENDERE",
+        "endnum": "NUMERO",
+        "cidade": "CIDADE",
+        "bairro": "COMPLE",
+        "uf": "ESTADO",
+        "cep": "CEP",
+        "comp": "CMPL",
+        "fone": "CELULAR",
+        "iestad": "IE",
+        "e_mail": "EMAIL"
+      },
+      "Condicao": [{
+        "Tipo": "S",
+        "Funcao": "",
+        "Campo": "NOME",
+        "Operador": "=",
+        "Valor": "var_cli",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    }
+  }
+}

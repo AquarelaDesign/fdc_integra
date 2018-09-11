@@ -1,0 +1,156 @@
+{
+  "Parametros": {
+    "ODBC_Nome": "AutoLins",
+    "Login": "atendimento@autolins.com.br",
+    "TipoDB": "FOXPRO",
+    "TimeZone": "America/Sao_Paulo",
+    "Servidor": "http://siare08.procyon.com.br",
+    "Porta": "3125",
+    "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
+    "Implantacao": 1,
+    "Saida": "Texto",
+    "RegPorVez": 250,
+    "SalvaLogs": "false",
+    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 1,
+    "Periodo": 5,
+    "Tempo": 0.1,
+    "Proxy": {
+      "UsaProxy": "false",
+      "ServidorP": "proxy.procyon.com.br",
+      "PortaP": "3128",
+      "Usuario": "jose",
+      "Senha": "Ze270972"
+    },
+    "Passagens": {
+      "Tabela": "ordemservico",
+      "Campos": {
+        "idipas": "OS_ID",
+        "placa": "VEI_PLACA",
+        "dtpsg": "OS_DATA",
+        "km": "OS_KM"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "OS_SITUACA",
+        "Operador": "=",
+        "Valor": "ENTREGUE",
+        "OpLogico": ""
+      }],
+      "Ordem": ["OS_DATA","OS_ID"]
+    },
+    "Servicos": {
+      "Tabela": "os_servico",
+      "Campos": {
+        "codser": "OS_SER_ID",
+        "descri": "OS_SER_DESCRICAO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "OS_ID",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Terceiros": {
+      "Tabela": "os_terceiro",
+      "Campos": {
+        "codser": "OS_TER_ID",
+        "descri": "OS_TER_DESC"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "OS_ID",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Pecas": {
+      "Tabela": "os_peca",
+      "Campos": {
+        "codpec": "PRODID",
+        "quant": "OS_PECA_QUANTU"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "OS_ID",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Produtos": {
+      "Tabela": "produtos",
+      "Campos": {
+        "codpec": "PRODID",
+        "descri": "PRODESC",
+        "valor": "PROVALORPR"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "PRODID",
+        "Operador": "=",
+        "Valor": "var_prod",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Veiculos": {
+      "Tabela": "veiculos",
+      "Campos": {
+        "placa": "VEI_PLACA",
+        "chassi": "VEI_CHASSI",
+        "descri": "VEI_MODELO",
+        "anomod": "VEI_ANO",
+        "anofab": "VEI_ANO",
+        "corvei": "VEI_COR",
+        "codcli": "CLI_ID"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "VEI_PLACA",
+        "Operador": "=",
+        "Valor": "var_placa",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Clientes": {
+      "Tabela": "clientes",
+      "Campos": {
+        "cgccpf": "CLI_CGCCPF",
+        "nome": "CLI_DESC",
+        "endere": "CLI_END",
+        "endnum": "CLI_NUM",
+        "cidade": "CLI_CIDADE",
+        "bairro": "CLI_BAIRRO",
+        "uf": "CLI_EST",
+        "cep": "CLI_CEP",
+        "comp": "CLI_COMPL",
+        "fone": "CLI_CELULAR",
+        "iestad": "CLI_RGIE",
+        "e_mail": "CLI_EMAIL"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CLI_ID",
+        "Operador": "=",
+        "Valor": "var_cli",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    }
+  }
+}

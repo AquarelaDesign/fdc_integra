@@ -1,0 +1,102 @@
+{
+  "Parametros": {
+    "ODBC_Nome": "Bonilha",
+    "Login": "mecanicabonilha@hotmail.com",
+    "TipoDB": "FIREBIRD",
+    "TimeZone": "America/Sao_Paulo",
+    "Servidor": "http://siare08.procyon.com.br",
+    "Porta": "3125",
+    "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
+    "Implantacao": 1,
+    "Saida": "Texto",
+    "RegPorVez": 250,
+    "SalvaLogs": "false",
+    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 1,
+    "Periodo": 5,
+    "Tempo": 0.1,
+    "Proxy": {
+      "UsaProxy": "false",
+      "ServidorP": "proxy.procyon.com.br",
+      "PortaP": "3128",
+      "Usuario": "jose",
+      "Senha": "Ze270972"
+    },
+    "Passagens": {
+      "Tabela": "ORDEM_SERVICO",
+      "Campos": {
+        "idipas": "COD_ORD",
+        "placa": "PLA_VEI",
+        "dtpsg": "DATA_ORD",
+        "km": "KM_VEI",
+        "descri": "NOM_VEI",
+        "corvei": "NRO_SERIE",
+        "anofab": "ACESS_ORD",
+        "cmbvei": "MARCA",
+        "nome": "NOM_CLI",
+        "fech": "STATUS_ORD"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "STATUS_ORD",
+        "Operador": "=",
+        "Valor": "3",
+        "OpLogico": ""
+      }],
+      "Ordem": ["DATA_ORD","COD_ORD"]
+    },
+    "Servicos": {
+      "Tabela": "SERVICO_ORDEM",
+      "Campos": {
+        "descri": "DES_SER",
+        "quant": "QTD_SER",
+        "valor": "VLR_UNI",
+        "valtot": "SUB_TOT",
+        "tipser": "TIP_SER"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "COD_ORD",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": ["TIP_SER","DES_SER"]
+    },
+    "Pecas": {
+      "Tabela": "ITENS_ORDEM",
+      "Campos": {
+        "codpec": "COD_MER",
+        "quant": "QTD_ORD",
+        "valor": "VLR_UNI"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "COD_ORD",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Produtos": {
+      "Tabela": "MERCADORIAS",
+      "Campos": {
+        "codpec": "COD_RED",
+        "descri": "NOM_MER"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "COD_RED",
+        "Operador": "=",
+        "Valor": "var_prod",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    }
+  }
+}

@@ -1,0 +1,234 @@
+{
+  "Parametros": {
+    "ODBC_Nome": "Zavati",
+    "Login": "zavati@zavati.com.br",
+    "TipoDB": "FIREBIRD",
+    "TimeZone": "America/Sao_Paulo",
+    "Servidor": "http://siare08.procyon.com.br",
+    "Porta": "3125",
+    "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
+    "Implantacao": 1,
+    "Saida": "Texto",
+    "RegPorVez": 250,
+    "SalvaLogs": "false",
+    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 1,
+    "Periodo": 5,
+    "Tempo": 0.1,
+    "Proxy": {
+      "UsaProxy": "false",
+      "ServidorP": "proxy.procyon.com.br",
+      "PortaP": "3128",
+      "Usuario": "jose",
+      "Senha": "Ze270972"
+    },
+    "Passagens": {
+      "Tabela": "OF_ORDEMSERVICO",
+      "Campos": {
+        "idipas": "NUMERO",
+        "placa": "VEICULO",
+        "dtpsg": "DATA_ABERTURA",
+        "km": "KMRODADOS"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "EMPRESA",
+        "Operador": "=",
+        "Valor": "003",
+        "OpLogico": "AND"
+      },{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "STATUS",
+        "Operador": "=",
+        "Valor": "'F'",
+        "OpLogico": ""
+      }],
+      "Ordem": ["DATA_ABERTURA","NUMERO"]
+    },
+    "Servicos": {
+      "Tabela": "OF_ORDEMSERVICOSERVICOS",
+      "Campos": {
+        "codser": "SERVICO",
+        "quant": "QUANTIDADE",
+        "valor": "VALORLIQUIDO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "EMPRESA",
+        "Operador": "=",
+        "Valor": "003",
+        "OpLogico": "AND"
+      },{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "NUMERO",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Servico": {
+      "Tabela": "SERVICOS",
+      "Campos": {
+        "codser": "CODIGO",
+        "descri": "NOME"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_serv",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Pecas": {
+      "Tabela": "OF_ORDEMSERVICOPRODUTOS",
+      "Campos": {
+        "codpec": "IDPRODUTO",
+        "descri": "NOME",
+        "quant": "QUANTIDADE",
+        "valor": "VALORLIQUIDO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "NUMERO",
+        "Operador": "=",
+        "Valor": "var_os",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Veiculos": {
+      "Tabela": "OF_VEICULOS",
+      "Campos": {
+        "placa": "PLACA",
+        "chassi": "CHASSI",
+        "marca": "MARCA",
+        "modelo": "MODELO",
+        "versao": "VERSAO",
+        "anomod": "ANOMODELO",
+        "anofab": "ANOFABRICACAO",
+        "corvei": "COR",
+        "cmbvei": "COMBUSTIVEL",
+        "km": "KMRODADOS",
+        "codcli": "PROPRIETARIO"
+      },
+      "Condicao": [{
+        "Tipo": "P",
+        "Funcao": "",
+        "Campo": "PLACA",
+        "Operador": "=",
+        "Valor": "var_placa",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Cor": {
+      "Tabela": "OF_COR",
+      "Campos": {
+        "descri": "DESCRICAO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_cor",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Combustivel": {
+      "Tabela": "OF_COMBUSTIVEL",
+      "Campos": {
+        "descri": "DESCRICAO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_combustivel",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Marca": {
+      "Tabela": "OF_MARCA",
+      "Campos": {
+        "descri": "DESCRICAO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_marca",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Modelo": {
+      "Tabela": "OF_MODELO",
+      "Campos": {
+        "descri": "DESCRICAO"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_modelo",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Clientes": {
+      "Tabela": "CLIENTE",
+      "Campos": {
+        "cgccpf": "CGCCPF",
+        "nome": "NOME",
+        "endere": "ENDERECO",
+        "endnum": "NUMIMOVEL",
+        "cidade": "CIDADE",
+        "bairro": "BAIRRO",
+        "uf": "ESTADO",
+        "cep": "CEP",
+        "comp": "COMPLEMENTO",
+        "fone": "CELULAR",
+        "iestad": "RGINSCREST"
+      },
+      "Condicao": [{
+        "Tipo": "S",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_cli",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Email": {
+      "Tabela": "CLIEMAIL",
+      "Campos": {
+        "e_mail": "EMAIL"
+      },
+      "Condicao": [{
+        "Tipo": "",
+        "Funcao": "",
+        "Campo": "CODIGO_CLIENTE",
+        "Operador": "=",
+        "Valor": "var_cli",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    }
+  }
+}
