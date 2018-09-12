@@ -136,7 +136,8 @@ def temp-table ttser
    field quanti    as   int
    field valser    as   dec
 
-   index ittser01 idipas codser.
+   index ittser01 idipas codser
+   index ittser02 idipas descri.
 
 /* Pecas */
 def temp-table ttpec
@@ -146,7 +147,8 @@ def temp-table ttpec
    field quanti    as   int
    field valpec    as   dec
 
-   index ittpec01 idipas codpec.
+   index ittpec01 idipas codpec
+   index ittpec02 idipas descri.
 
 /* Cliente */
 def temp-table ttcli
@@ -193,6 +195,9 @@ def buffer buffcvei for fcvei.
 def buffer buffckmv for fckmv.
 def buffer buftbnum for tbnum.
 
+def buffer buf1fcspv for fcspv.
+def buffer buf1fcppv for fcppv.
+
 /* funcoes */
 function limpaString return character
         (p_string as cha, p_subval as log) forward.
@@ -202,14 +207,14 @@ assign wldirtxt = ""
     /* wlarqcsv = wldirtxt + "cargaInicial.txt" */
     /* wlarqcsv = wldirtxt + "ReiDosCarburadores.txt" */
     /* wlarqcsv = wldirtxt + "Zavati.txt" */
-       wlarqcsv = wldirtxt + "Bonilha.txt"
+    /* wlarqcsv = wldirtxt + "Bonilha.txt" */
     /* wlarqcsv = wldirtxt + "AutoLins.txt" */
-    /* wlarqcsv = wldirtxt + "Germano.txt" */
+       wlarqcsv = wldirtxt + "Germano.txt" 
        wlarqquo = wldirtxt + "cargaInicial.quo"
 
        wlidpant = "".
 
-output to "cargaLogBonilha.txt".
+output to "cargaLogGermano.txt".
 put unformatted "[" 
               + string(today,"99/99/9999")
               + " - "
@@ -235,10 +240,6 @@ then do:
 
       if lookup(wlimport, '"') > 0
       then next.
-
-      wllimp = wllimp + 1.
-      put screen row 3 column 5 string(wllimp, ">>>>>>>") 
-        + " " + trim(entry(01, wlimport, wldeli)).
 
       case trim(entry(01, wlimport, wldeli)):
          when "CAB"
@@ -294,6 +295,10 @@ then do:
                          buffccpv.dttran = today
                          buffccpv.hortra = time.
                
+                  wllimp = wllimp + 1.
+                  put screen row 3 column 5 "Passagens Importadas: " + string(wllimp, ">>>>>>>") 
+                    + " Passagem: " + wlidpant.
+
                   find buffckmv where buffckmv.placa  = buffccpv.placa
                                   and buffckmv.idgpas = buffccpv.idgpas 
                                   no-lock no-error.
@@ -346,17 +351,23 @@ then do:
                if avail ttser
                then do:
                   /* Grava Servicos */
-                  do for buffcspv:
+                  do for buffcspv, buf1fcspv:
                      for each ttser where ttser.idipas = wlidpant no-lock:
-                        create buffcspv.
-                        assign buffcspv.idgpas = wlidgpas
-                               buffcspv.idipas = ttser.idipas
-                               buffcspv.codser = ttser.codser
-                               buffcspv.descri = ttser.descri
-                               buffcspv.quant  = ttser.quanti
-                               buffcspv.vlunit = ttser.valser
-                               buffcspv.dttran = today
-                               buffcspv.hortra = time.
+                        find first buf1fcspv where buf1fcspv.idipas = ttser.idipas
+                                               and buf1fcspv.descri = ttser.descri
+                                               use-index ifcspv01 no-lock no-error.
+                        if not avail buf1fcspv
+                        then do:
+                           create buffcspv.
+                           assign buffcspv.idgpas = wlidgpas
+                                  buffcspv.idipas = ttser.idipas
+                                  buffcspv.codser = ttser.codser
+                                  buffcspv.descri = ttser.descri
+                                  buffcspv.quant  = ttser.quanti
+                                  buffcspv.vlunit = ttser.valser
+                                  buffcspv.dttran = today
+                                  buffcspv.hortra = time.
+                        end.
                      end.
                   end.
                end.
@@ -367,17 +378,23 @@ then do:
                if avail ttpec
                then do:
                   /* Grava Pecas */
-                  do for buffcppv:
+                  do for buffcppv, buf1fcppv:
                      for each ttpec where ttpec.idipas = wlidpant no-lock:
-                        create buffcppv.
-                        assign buffcppv.idgpas = wlidgpas
-                               buffcppv.idipas = ttpec.idipas
-                               buffcppv.codpec = ttpec.codpec
-                               buffcppv.descri = ttpec.descri
-                               buffcppv.quant  = ttpec.quanti
-                               buffcppv.vlunit = ttpec.valpec
-                               buffcppv.dttran = today
-                               buffcppv.hortra = time.
+                        find first buf1fcppv where buf1fcppv.idipas = ttpec.idipas
+                                               and buf1fcppv.descri = ttpec.descri
+                                               use-index ifcppv01 no-lock no-error.
+                        if not avail buf1fcppv
+                        then do:
+                           create buffcppv.
+                           assign buffcppv.idgpas = wlidgpas
+                                  buffcppv.idipas = ttpec.idipas
+                                  buffcppv.codpec = ttpec.codpec
+                                  buffcppv.descri = ttpec.descri
+                                  buffcppv.quant  = ttpec.quanti
+                                  buffcppv.vlunit = ttpec.valpec
+                                  buffcppv.dttran = today
+                                  buffcppv.hortra = time.
+                        end.
                      end.
                   end.
                end.
@@ -502,7 +519,7 @@ then do:
                    ttpas.kmatua =     int(entry(05, wlimport, wldeli))
                    ttpas.dtpass =     (if entry(06, wlimport, wldeli) <> ""
                                        then date(entry(06, wlimport, wldeli))
-                                    else ?)
+                                       else ?)
                    ttpas.cgccpf =         entry(07, wlimport, wldeli).
          end.
          when "REL"
@@ -518,8 +535,8 @@ then do:
             assign ttser.idipas =         entry(02, wlimport, wldeli)
                    ttser.codser =         entry(03, wlimport, wldeli)
                    ttser.descri =         entry(04, wlimport, wldeli)
-                   ttser.quanti =     dec(entry(05, wlimport, wldeli))
-                   ttser.valser =     dec(entry(06, wlimport, wldeli)).
+                   ttser.quanti =     dec(replace(entry(05, wlimport, wldeli),'.',','))
+                   ttser.valser =     dec(replace(entry(06, wlimport, wldeli),'.',',')).
          end.
          when "PEC"
          then do:
@@ -527,8 +544,8 @@ then do:
             assign ttpec.idipas =         entry(02, wlimport, wldeli)
                    ttpec.codpec =         entry(03, wlimport, wldeli)
                    ttpec.descri =         entry(04, wlimport, wldeli)
-                   ttpec.quanti =     dec(entry(05, wlimport, wldeli))
-                   ttpec.valpec =     dec(entry(06, wlimport, wldeli)).
+                   ttpec.quanti =     dec(replace(entry(05, wlimport, wldeli),'.',','))
+                   ttpec.valpec =     dec(replace(entry(06, wlimport, wldeli),'.',',')).
          end.
          when "CLI"
          then do:
@@ -579,9 +596,6 @@ then do:
          otherwise next.
       end.
 
-      put screen row 4 column 5 string(wlidpant).
-      put screen row 5 column 5 string(wlidipas).
-      
       assign wlidpant = wlidipas.
 
    end.

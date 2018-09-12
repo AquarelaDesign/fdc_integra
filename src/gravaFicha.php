@@ -1291,6 +1291,8 @@ do {
          $ordem[0]['chassi'] = (array_key_exists('chassi', $os) ? $os['chassi'] : $os['veiculo'][0]['chassi']);
          $ordem[0]['km']     = (array_key_exists('km', $os)     ? $os['km']     : $os['veiculo'][0]['km']);
       }
+      $ordem[0]['km'] = str_replace('.', '', $ordem[0]['km']);
+      $ordem[0]['km'] = str_replace(',', '', $ordem[0]['km']);
 
       $ordem[0]['dtpsg']  = date("d/m/Y", strtotime($os['dtpsg']));
 
@@ -1322,7 +1324,21 @@ do {
             $servicos[$s]['quant'] = 0;
          } elseif ($servicos[$s]['quant'] == 0) {
             $servicos[$s]['quant'] = 1;
+        } else {   
+            $pos = strpos($servicos[$s]['quant'], ':');
+            
+            if ($pos === false) {
+            } else {
+                $arrval = explode(':',$servicos[$s]['quant']);
+                $hh = $arrval[0] * 3600;
+                $mm = $arrval[1] * 60;
+                $hs = (($hh + $mm) / 60) / 60;
+                
+                $servicos[$s]['quant'] = $hs;
+            }
+
          }
+         $servicos[$s]['quant'] = str_replace(',', '.', $servicos[$s]['quant']);
 
          if (!array_key_exists('valor' , $servicos[$s])) {
             $servicos[$s]['valor'] = 0;
@@ -1330,7 +1346,9 @@ do {
             if (array_key_exists('valtot' , $servicos[$s])) {
                $servicos[$s]['valor'] = $servicos[$s]['valtot'];
             }
-         }
+        }
+
+        $servicos[$s]['valor'] = str_replace(',', '.', $servicos[$s]['valor']);
 
          $ser[$s]['codser'] = $servicos[$s]['codser'];
          $ser[$s]['descri'] = $servicos[$s]['descri'];
@@ -1797,7 +1815,7 @@ function condicao($arrCond = array()) {
                         if ($t == 'S') {
                            $cond_str .= "'" . $valor . "'";
                         } else {
-                           $cond_str .= str_replace(".", ',', $valor);
+                           $cond_str .= $valor;
                            //salvaLog(array($valor));
                         }
                      }
