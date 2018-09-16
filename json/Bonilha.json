@@ -23,7 +23,9 @@
       "Senha": "Ze270972"
     },
     "Passagens": {
+      "ODBC": "Bonilha",
       "Tabela": "ORDEM_SERVICO",
+      "FormatoPas": "I",
       "Campos": {
         "idipas": "COD_ORD",
         "placa": "PLA_VEI",
@@ -34,19 +36,21 @@
         "anofab": "ACESS_ORD",
         "cmbvei": "MARCA",
         "nome": "NOM_CLI",
-        "fech": "STATUS_ORD"
+        "fech": "STATUS_ORD",
+        "codcli": "COD_CLI"
       },
       "Condicao": [{
-        "Tipo": "",
+        "Tipo": "I",
         "Funcao": "",
         "Campo": "STATUS_ORD",
-        "Operador": "=",
+        "Operador": ">=",
         "Valor": "3",
         "OpLogico": ""
       }],
-      "Ordem": ["DATA_ORD","COD_ORD"]
+      "Ordem": ["COD_ORD"]
     },
     "Servicos": {
+      "ODBC": "Bonilha",
       "Tabela": "SERVICO_ORDEM",
       "Campos": {
         "descri": "DES_SER",
@@ -66,6 +70,7 @@
       "Ordem": ["TIP_SER","DES_SER"]
     },
     "Pecas": {
+      "ODBC": "Bonilha",
       "Tabela": "ITENS_ORDEM",
       "Campos": {
         "codpec": "COD_MER",
@@ -83,17 +88,46 @@
       "Ordem": []
     },
     "Produtos": {
+      "ODBC": "Bonilha",
       "Tabela": "MERCADORIAS",
       "Campos": {
         "codpec": "COD_RED",
         "descri": "NOM_MER"
       },
       "Condicao": [{
-        "Tipo": "",
+        "Tipo": "I",
         "Funcao": "",
         "Campo": "COD_RED",
         "Operador": "=",
         "Valor": "var_prod",
+        "OpLogico": ""
+      }],
+      "Ordem": []
+    },
+    "Clientes": {
+      "ODBC": "BonilhaRec",
+      "Tabela": "CLIENTES",
+      "Campos": {
+        "nome": "NOME",
+        "endere": "ENDERECO",
+        "cidade": "CIDADE",
+        "bairro": "BAIRRO",
+        "uf": "UF",
+        "cep": "CEP",
+        "fone": "CELULAR",
+        "e_mail": "EMAIL",
+        "tipcli": "TIPOCLI",
+        "cgc": "CNPJ",
+        "cpf": "CPF",
+        "ie": "IE",
+        "rg": "IDENTIDADE"
+      },
+      "Condicao": [{
+        "Tipo": "I",
+        "Funcao": "",
+        "Campo": "CODIGO",
+        "Operador": "=",
+        "Valor": "var_codcli",
         "OpLogico": ""
       }],
       "Ordem": []
