@@ -93,7 +93,7 @@ if (json_last_error() !== JSON_ERROR_NONE) {
    exit(1);
 }
 
-$p   = $par->Parametros;
+$p = $par->Parametros;
 
 ## Parametros ##
 
@@ -117,11 +117,30 @@ $dataLimite = (date('Y') - $p->Periodo); // Anos retroativos ao Atual para inici
 $tempo      = $p->Tempo; // Tempo de cada Ciclo
 $tempo      = ($tempo * 3600); // 60s = 1m  / 3600s = 1h
 
+$TipoConexao = $p->TipoConexao; // Tipo de Conexao com o Banco de Dados
+$PDO         = $p->PDO;         // Server, Port, Data, User, Password
+
 ## Arquivo de Logs
 $salvaLogs  = $p->SalvaLogs; // Salva no arquivo de log os dados do envio de cada Registro
 $log_path   = utf8_decode($p->CaminhoLogs); // Pasta para armazenamentos dos arquivos de Log
 define('SALVA_LOGS',  $salvaLogs);
 define('LOG_PATH',  $log_path);
+
+
+## Valida se PDO esta habilitado no php.ini
+if ($TipoConexao == 'PDO') {
+   $PDO_Ok = NULL;
+   foreach(PDO::getAvailableDrivers() as $driver) {
+      if (strtolower(TIPO_DB)==strtolower($driver)) {
+         $PDO_Ok = $driver;
+      }
+   }
+   
+   if ($PDO_Ok == NULL) {
+      salvaLog(array("Extesão PDO para o DB " . strtoupper(TIPO_DB) . " deve estar habilitada no 'php.ini'"));
+      exit;
+   }
+}
 
 ## Servico de sincronizacao (Webservice da Ficha do Carro)
 $Servidor = $p->Servidor;
@@ -155,15 +174,19 @@ define('PORTA',    $proxyPar['Porta']);
 $ForPas = (property_exists($p->Passagens, 'FormatoPas') ? $p->Passagens->FormatoPas : '');
 
 if (property_exists($p, 'Passagens')) {
-   # Valida ODBC
-   if (property_exists($p->Passagens, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Passagens, 'PDO')) {
+         $os_pdo_ord = $p->Passagens->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Passagens, 'ODBC')) {
       if (utf8_decode($p->Passagens->ODBC) !== $odbc_name) {
          $os_odb_ord = (utf8_decode($p->Passagens->ODBC));
       } else {
-         $os_odb_ord = NULL;
+         $os_odb_ord = $odbc_name;
       }
    } else {
-      $os_odb_ord = NULL;
+      $os_odb_ord = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -186,6 +209,7 @@ if (property_exists($p, 'Passagens')) {
    $os_ord_ord = $p->Passagens->Ordem;
 
 } else {
+   $os_pdo_ord = NULL;
    $os_odb_ord = NULL;
    $os_tab_ord = NULL;
    $os_cam_ord = NULL;
@@ -195,15 +219,19 @@ if (property_exists($p, 'Passagens')) {
 
 ## Relatos
 if (property_exists($p, 'Relatos')) {
-   # Valida ODBC
-   if (property_exists($p->Relatos, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Relatos, 'PDO')) {
+         $os_pdo_rel = $p->Relatos->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Relatos, 'ODBC')) {
       if (utf8_decode($p->Relatos->ODBC) !== $odbc_name) {
          $os_odb_rel = (utf8_decode($p->Relatos->ODBC));
       } else {
-         $os_odb_rel = NULL;
+         $os_odb_rel = $odbc_name;
       }
    } else {
-      $os_odb_rel = NULL;
+      $os_odb_rel = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -226,6 +254,7 @@ if (property_exists($p, 'Relatos')) {
    $os_rel_rel = $p->Relatos->Ordem;
 
 } else {
+   $os_pdo_rel = NULL;
    $os_odb_rel = NULL;
    $os_tab_rel = NULL;
    $os_cam_rel = NULL;
@@ -235,15 +264,19 @@ if (property_exists($p, 'Relatos')) {
 
 ## Servicos
 if (property_exists($p, 'Servicos')) {
-   # Valida ODBC
-   if (property_exists($p->Servicos, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Servicos, 'PDO')) {
+         $os_pdo_ser = $p->Servicos->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Servicos, 'ODBC')) {
       if (utf8_decode($p->Servicos->ODBC) !== $odbc_name) {
          $os_odb_ser = (utf8_decode($p->Servicos->ODBC));
       } else {
-         $os_odb_ser = NULL;
+         $os_odb_ser = $odbc_name;
       }
    } else {
-      $os_odb_ser = NULL;
+      $os_odb_ser = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -266,6 +299,7 @@ if (property_exists($p, 'Servicos')) {
    $os_ord_ser = $p->Servicos->Ordem;
 
 } else {
+   $os_pdo_ser = NULL;
    $os_odb_ser = NULL;
    $os_tab_ser = NULL;
    $os_cam_ser = NULL;
@@ -275,15 +309,19 @@ if (property_exists($p, 'Servicos')) {
 
 ## Terceiros
 if (property_exists($p, 'Terceiros')) {
-   # Valida ODBC
-   if (property_exists($p->Terceiros, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Terceiros, 'PDO')) {
+         $os_pdo_ter = $p->Terceiros->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Terceiros, 'ODBC')) {
       if (utf8_decode($p->Terceiros->ODBC) !== $odbc_name) {
          $os_odb_ter = (utf8_decode($p->Terceiros->ODBC));
       } else {
-         $os_odb_ter = NULL;
+         $os_odb_ter = $odbc_name;
       }
    } else {
-      $os_odb_ter = NULL;
+      $os_odb_ter = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -306,6 +344,7 @@ if (property_exists($p, 'Terceiros')) {
    $os_ord_ter = $p->Terceiros->Ordem;
 
 } else {
+   $os_pdo_ter = NULL;
    $os_odb_ter = NULL;
    $os_tab_ter = NULL;
    $os_cam_ter = NULL;
@@ -315,15 +354,19 @@ if (property_exists($p, 'Terceiros')) {
 
 ## Servico
 if (property_exists($p, 'Servico')) {
-   # Valida ODBC
-   if (property_exists($p->Servico, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Servico, 'PDO')) {
+         $os_pdo_sev = $p->Servico->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Servico, 'ODBC')) {
       if (utf8_decode($p->Servico->ODBC) !== $odbc_name) {
          $os_odb_sev = (utf8_decode($p->Servico->ODBC));
       } else {
-         $os_odb_sev = NULL;
+         $os_odb_sev = $odbc_name;
       }
    } else {
-      $os_odb_sev = NULL;
+      $os_odb_sev = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -346,6 +389,7 @@ if (property_exists($p, 'Servico')) {
    $os_ord_sev = $p->Servico->Ordem;
 
 } else {
+   $os_pdo_sev = NULL;
    $os_odb_sev = NULL;
    $os_tab_sev = NULL;
    $os_cam_sev = NULL;
@@ -355,15 +399,19 @@ if (property_exists($p, 'Servico')) {
 
 ## Pecas
 if (property_exists($p, 'Pecas')) {
-   # Valida ODBC
-   if (property_exists($p->Pecas, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Pecas, 'PDO')) {
+         $os_pdo_pec = $p->Pecas->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Pecas, 'ODBC')) {
       if (utf8_decode($p->Pecas->ODBC) !== $odbc_name) {
          $os_odb_pec = (utf8_decode($p->Pecas->ODBC));
       } else {
-         $os_odb_pec = NULL;
+         $os_odb_pec = $odbc_name;
       }
    } else {
-      $os_odb_pec = NULL;
+      $os_odb_pec = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -386,6 +434,7 @@ if (property_exists($p, 'Pecas')) {
    $os_ord_pec = $p->Pecas->Ordem;
 
 } else {
+   $os_pdo_pec = NULL;
    $os_odb_pec = NULL;
    $os_tab_pec = NULL;
    $os_cam_pec = NULL;
@@ -395,15 +444,19 @@ if (property_exists($p, 'Pecas')) {
 
 ## Produtos
 if (property_exists($p, 'Produtos')) {
-   # Valida ODBC
-   if (property_exists($p->Produtos, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Produtos, 'PDO')) {
+         $os_pdo_pro = $p->Produtos->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Produtos, 'ODBC')) {
       if (utf8_decode($p->Produtos->ODBC) !== $odbc_name) {
          $os_odb_pro = (utf8_decode($p->Produtos->ODBC));
       } else {
-         $os_odb_pro = NULL;
+         $os_odb_pro = $odbc_name;
       }
    } else {
-      $os_odb_pro = NULL;
+      $os_odb_pro = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -426,6 +479,7 @@ if (property_exists($p, 'Produtos')) {
    $os_ord_pro = $p->Produtos->Ordem;
 
 } else {
+   $os_pdo_pro = NULL;
    $os_odb_pro = NULL;
    $os_tab_pro = NULL;
    $os_cam_pro = NULL;
@@ -435,15 +489,19 @@ if (property_exists($p, 'Produtos')) {
 
 ## Veiculos
 if (property_exists($p, 'Veiculos')) {
-   # Valida ODBC
-   if (property_exists($p->Veiculos, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Veiculos, 'PDO')) {
+         $os_pdo_vei = $p->Veiculos->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Veiculos, 'ODBC')) {
       if (utf8_decode($p->Veiculos->ODBC) !== $odbc_name) {
          $os_odb_vei = (utf8_decode($p->Veiculos->ODBC));
       } else {
-         $os_odb_vei = NULL;
+         $os_odb_vei = $odbc_name;
       }
    } else {
-      $os_odb_vei = NULL;
+      $os_odb_vei = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -466,6 +524,7 @@ if (property_exists($p, 'Veiculos')) {
    $os_ord_vei = $p->Veiculos->Ordem;
 
 } else {
+   $os_pdo_vei = NULL;
    $os_odb_vei = NULL;
    $os_tab_vei = NULL;
    $os_cam_vei = NULL;
@@ -475,15 +534,19 @@ if (property_exists($p, 'Veiculos')) {
 
 ## Cor
 if (property_exists($p, 'Cor')) {
-   # Valida ODBC
-   if (property_exists($p->Cor, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Cor, 'PDO')) {
+         $os_pdo_cor = $p->Cor->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Cor, 'ODBC')) {
       if (utf8_decode($p->Cor->ODBC) !== $odbc_name) {
          $os_odb_cor = (utf8_decode($p->Cor->ODBC));
       } else {
-         $os_odb_cor = NULL;
+         $os_odb_cor = $odbc_name;
       }
    } else {
-      $os_odb_cor = NULL;
+      $os_odb_cor = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -506,6 +569,7 @@ if (property_exists($p, 'Cor')) {
    $os_ord_cor = $p->Cor->Ordem;
 
 } else {
+   $os_pdo_cor = NULL;
    $os_odb_cor = NULL;
    $os_tab_cor = NULL;
    $os_cam_cor = NULL;
@@ -515,15 +579,19 @@ if (property_exists($p, 'Cor')) {
 
 ## Combustivel
 if (property_exists($p, 'Combustivel')) {
-   # Valida ODBC
-   if (property_exists($p->Combustivel, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Combustivel, 'PDO')) {
+         $os_pdo_cmb = $p->Combustivel->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Combustivel, 'ODBC')) {
       if (utf8_decode($p->Combustivel->ODBC) !== $odbc_name) {
          $os_odb_cmb = (utf8_decode($p->Combustivel->ODBC));
       } else {
-         $os_odb_cmb = NULL;
+         $os_odb_cmb = $odbc_name;
       }
    } else {
-      $os_odb_cmb = NULL;
+      $os_odb_cmb = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -546,6 +614,7 @@ if (property_exists($p, 'Combustivel')) {
    $os_ord_cmb = $p->Combustivel->Ordem;
 
 } else {
+   $os_pdo_cmb = NULL;
    $os_odb_cmb = NULL;
    $os_tab_cmb = NULL;
    $os_cam_cmb = NULL;
@@ -555,15 +624,19 @@ if (property_exists($p, 'Combustivel')) {
 
 ## Marca
 if (property_exists($p, 'Marca')) {
-   # Valida ODBC
-   if (property_exists($p->Marca, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Marca, 'PDO')) {
+         $os_pdo_mar = $p->Marca->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Marca, 'ODBC')) {
       if (utf8_decode($p->Marca->ODBC) !== $odbc_name) {
          $os_odb_mar = (utf8_decode($p->Marca->ODBC));
       } else {
-         $os_odb_mar = NULL;
+         $os_odb_mar = $odbc_name;
       }
    } else {
-      $os_odb_mar = NULL;
+      $os_odb_mar = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -586,6 +659,7 @@ if (property_exists($p, 'Marca')) {
    $os_ord_mar = $p->Marca->Ordem;
 
 } else {
+   $os_pdo_mar = NULL;
    $os_odb_mar = NULL;
    $os_tab_mar = NULL;
    $os_cam_mar = NULL;
@@ -595,15 +669,19 @@ if (property_exists($p, 'Marca')) {
 
 ## Modelo
 if (property_exists($p, 'Modelo')) {
-   # Valida ODBC
-   if (property_exists($p->Modelo, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Modelo, 'PDO')) {
+         $os_pdo_mod = $p->Modelo->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Modelo, 'ODBC')) {
       if (utf8_decode($p->Modelo->ODBC) !== $odbc_name) {
          $os_odb_mod = (utf8_decode($p->Modelo->ODBC));
       } else {
-         $os_odb_mod = NULL;
+         $os_odb_mod = $odbc_name;
       }
    } else {
-      $os_odb_mod = NULL;
+      $os_odb_mod = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -626,6 +704,7 @@ if (property_exists($p, 'Modelo')) {
    $os_ord_mod = $p->Modelo->Ordem;
 
 } else {
+   $os_pdo_mod = NULL;
    $os_odb_mod = NULL;
    $os_tab_mod = NULL;
    $os_cam_mod = NULL;
@@ -635,15 +714,19 @@ if (property_exists($p, 'Modelo')) {
 
 ## Cliente
 if (property_exists($p, 'Clientes')) {
-   # Valida ODBC
-   if (property_exists($p->Clientes, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Clientes, 'PDO')) {
+         $os_pdo_cli = $p->Clientes->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Clientes, 'ODBC')) {
       if (utf8_decode($p->Clientes->ODBC) !== $odbc_name) {
          $os_odb_cli = (utf8_decode($p->Clientes->ODBC));
       } else {
-         $os_odb_cli = NULL;
+         $os_odb_cli = $odbc_name;
       }
    } else {
-      $os_odb_cli = NULL;
+      $os_odb_cli = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -666,6 +749,7 @@ if (property_exists($p, 'Clientes')) {
    $os_ord_cli = $p->Clientes->Ordem;
 
 } else {
+   $os_pdo_cli = NULL;
    $os_odb_cli = NULL;
    $os_tab_cli = NULL;
    $os_cam_cli = NULL;
@@ -675,15 +759,19 @@ if (property_exists($p, 'Clientes')) {
 
 ## Email
 if (property_exists($p, 'Email')) {
-   # Valida ODBC
-   if (property_exists($p->Email, 'ODBC')) {
+   # Valida Conexao
+   if ($TipoConexao == 'PDO') {
+      if (property_exists($p->Email, 'PDO')) {
+         $os_pdo_ema = $p->Email->PDO; // Server, Port, Data, User, Password
+      }
+   } elseif (property_exists($p->Email, 'ODBC')) {
       if (utf8_decode($p->Email->ODBC) !== $odbc_name) {
          $os_odb_ema = (utf8_decode($p->Email->ODBC));
       } else {
-         $os_odb_ema = NULL;
+         $os_odb_ema = $odbc_name;
       }
    } else {
-      $os_odb_ema = NULL;
+      $os_odb_ema = $odbc_name;
    }
 
    # Busca Tabela (From)
@@ -706,6 +794,7 @@ if (property_exists($p, 'Email')) {
    $os_ord_ema = $p->Email->Ordem;
 
 } else {
+   $os_pdo_ema = NULL;
    $os_odb_ema = NULL;
    $os_tab_ema = NULL;
    $os_cam_ema = NULL;
@@ -732,8 +821,6 @@ if ($os_cam_cli != NULL) $dado[]['Clientes']    = $os_cam_cli;
 if ($os_cam_ema != NULL) $dado[]['Email']       = $os_cam_ema;
 
 $dados = array('Parametros' => $dado);
-//echo '<pre>' . print_r(json_encode($dados), true) . '</pre><br/>';
-//exit;
 
 ## Inicio do Temporizador ##
 $Fim       = 0;
@@ -750,32 +837,38 @@ if ($saida != 'Texto') {
 do {
    ## Busca ultima passagem
    if ($saida != 'Texto') {
-      $parametros = array('pservico' => 'wfcusu',
-                          'pmetodo'  => 'BuscaUsuario',
-                          'pemail'   => $pcodemp
-                         );
-      $salvaRet = enviaDados($url, $parametros);
-      $vuser    = $salvaRet->ProDataSet;
-      $ultpsg   = 0;
-      $user     = '';
+      if ($implanta == 0) {
+         $parametros = array('pservico' => 'wfcusu',
+                             'pmetodo'  => 'BuscaUsuario',
+                             'pemail'   => $pcodemp
+                            );
+         $salvaRet = enviaDados($url, $parametros);
+         $vuser    = $salvaRet->ProDataSet;
+         $ultpsg   = 0;
+         $user     = '';
 
-      if (property_exists($vuser, 'ttfcusu')) {
-         $ultpsg = $vuser->ttfcusu[0]->ultpsg;
-         $user   = $vuser->ttfcusu[0]->nome;
+         if (property_exists($vuser, 'ttfcusu')) {
+            $ultpsg       = $vuser->ttfcusu[0]->ultpsg;
+            //$ultpsg_geral = $vuser->ttfcusu[0]->ultpsg;
+            $ultpsg_geral = $ultpsg;
+            $user         = $vuser->ttfcusu[0]->nome;
+            
 
-         if ($primeiro == 0) {
-            salvaLog(array('Sincronizando dados para o usuário "'.$user.'" ('.$pcodemp.')'));
-            $primeiro = 1;
-         }
+            if ($primeiro == 0) {
+               salvaLog(array('Sincronizando dados para o usuário "'.$user.'" ('.$pcodemp.')'));
+               salvaLog(array('Última Passagem: ' . $ultpsg_geral));
+               $primeiro = 1;
+            }
 
-      } else {
-         if (property_exists($vuser, 'ttretorno')) {
-            $mensagens = array($vuser->ttretorno->mensagem);
          } else {
-            $mensagens = array('Erro na validacao do usuario "'.$pcodemp.'"');
+            if (property_exists($vuser, 'ttretorno')) {
+               $mensagens = array($vuser->ttretorno->mensagem);
+            } else {
+               $mensagens = array('Erro na validacao do usuario "'.$pcodemp.'"');
+            }
+            salvaLog($mensagens);
+            exit;
          }
-         salvaLog($mensagens);
-         exit;
       }
    }
 
@@ -792,35 +885,28 @@ do {
       $ultpsg = 0;
    }
 
-   //if ($pcodemp == "zavati@zavati.com.br" && $ultpsg == 0) $ultpsg = 33771;
-   //if ($pcodemp == "contato@reidoscaburadores.com.br" && $ultpsg == 0) $ultpsg = 34878;
-
    $os_con_ord_1 = $os_con_ord;
-   //if ($implanta == 0) {
-      //echo (count($os_con_ord_1) - 1) . '<br/>';
-      if ($os_con_ord_1[count($os_con_ord_1) - 1]['OpLogico'] == '') {
-         $os_con_ord_1[count($os_con_ord_1) - 1]['OpLogico'] = 'AND';
+   if ($os_con_ord_1[count($os_con_ord_1) - 1]['OpLogico'] == '') {
+      $os_con_ord_1[count($os_con_ord_1) - 1]['OpLogico'] = 'AND';
+   }
+
+   $os = array();
+
+   if (array_key_exists('idtipo', $os_cam_ord)) {
+      if ($os_cam_ord['idtipo'] == 'S') {
+         $os['Tipo'] = 'S';
       }
+   }
 
-      $os = array();
+   if ($ForPas == 'I') {
+      $os['Tipo'] = 'I';
+   }
 
-      if (array_key_exists('idtipo', $os_cam_ord)) {
-         if ($os_cam_ord['idtipo'] == 'S') {
-            $os['Tipo'] = 'S';
-         }
-      }
-
-      if ($ForPas == 'I') {
-         $os['Tipo'] = 'I';
-      }
-
-      $os['Campo'] = utf8_encode($os_cam_ord['idipas']);
-      $os['Operador'] = '>';
-      $os['Valor'] = ($ForPas == 'I' ? intval($ultpsg) : $ultpsg);
-      //$os['Valor'] = $ultpsg;
-      $os['OpLogico'] = '';
-      $os_con_ord_1[] = $os;
-   //}
+   $os['Campo'] = utf8_encode($os_cam_ord['idipas']);
+   $os['Operador'] = '>';
+   $os['Valor'] = ($ForPas == 'I' ? intval($ultpsg) : $ultpsg);
+   $os['OpLogico'] = '';
+   $os_con_ord_1[] = $os;
 
    ## Verifica Periodo
    if (!empty($dataLimite)) { // && $saida != 'Texto') {
@@ -865,33 +951,54 @@ do {
                . ' ' . $os_cam_ord['idipas']  . ' DESC'
                ;
 
-   ## Conecta ao ODBC (Padrão)
-   $conn = odbc_connect($odbc_name, "", "");
+   if ($TipoConexao == 'PDO') {
+      try {
+         if ($os_pdo_ord !== NULL) {
+            $Conn = Conecta(TIPO_DB, $os_pdo_ord->Server, $os_pdo_ord->Data, $os_pdo_ord->User, $os_pdo_ord->Password, $os_pdo_ord->Port);
+         } else {
+            $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+         }
 
-   if (odbc_error()) {
-      salvaLog(array("Erro ao tentar conectar ODBC (Padrão): " . odbc_errormsg($conn)));
-      exit;
+      } catch (Exception $e) {
+         salvaLog(array("Erro ao tentar conectar PDO (Pas_U): " . htmlentities($e->getMessage())));
+         exit;
+      }
+      $result = Consulta($Conn, $sql_os_ult);
+      unset($Conn);
+   } else {
+      ## Conecta ao ODBC (Padrão)
+      $conn = odbc_connect($odbc_name, "", "");
+
+      if (odbc_error()) {
+         salvaLog(array("Erro ao tentar conectar ODBC (Padrão): " . odbc_errormsg($conn)));
+         exit;
+      }
+
+      ## Conecta ao ODBC
+      $conn_ord_ult = odbc_connect($os_odb_ord !== NULL ? $os_odb_ord : $odbc_name, "", "");
+
+      if (odbc_error()) {
+         salvaLog(array("Erro ao tentar conectar ODBC (Pas_U): " . odbc_errormsg($conn_ord_ult)));
+         exit;
+      }
+
+      $exec = odbc_exec($conn_ord_ult, $sql_os_ult);
+
+      if (odbc_error()) {
+         $mensagens = array();
+         $mensagens[] = "SQL (Ult): " . $sql_os_ult;
+         $mensagens[] = "ERRO ODBC (Ult): " . odbc_errormsg($conn_ord_ult);
+         salvaLog($mensagens);
+         exit;
+      }
+      $result = array();
+      while ($tmp = odbc_fetch_array($exec)) {
+         $result[] = $tmp;
+      }
+
+      odbc_close($conn_ord_ult);
    }
-
-   ## Conecta ao ODBC
-   $conn_ord_ult = odbc_connect($os_odb_ord !== NULL ? $os_odb_ord : $odbc_name, "", "");
-
-   if (odbc_error()) {
-      salvaLog(array("Erro ao tentar conectar ODBC (Pas_U): " . odbc_errormsg($conn_ord_ult)));
-      exit;
-   }
-
-   $exec = odbc_exec($conn_ord_ult, $sql_os_ult);
-
-   if (odbc_error()) {
-      $mensagens = array();
-      $mensagens[] = "SQL (Ult): " . $sql_os_ult;
-      $mensagens[] = "ERRO ODBC (Ult): " . odbc_errormsg($conn_ord_ult);
-      salvaLog($mensagens);
-      exit;
-   }
-   $result = odbc_fetch_array($exec);
-
+ 
    $Ultima_os = $result['ULTIMA_OS'];
 
    if (array_key_exists('ULTIMA_OS', $result)) {
@@ -903,39 +1010,43 @@ do {
    } else {
       $Ultima_os = 999999999;
    }
-   //salvaLog(array('fetch_u: ' . print_r(odbc_fetch_array($exec), true) ));
-
-   odbc_close($conn_ord_ult);
 
    for ($id=0; $id < $regs; $id++) { 
-      ## Conecta ao ODBC
-      $conn_ord = odbc_connect($os_odb_ord !== NULL ? $os_odb_ord : $odbc_name, "", "");
-      
-      if (odbc_error()) {
-         salvaLog(array("Erro ao tentar conectar ODBC (Pas): " . odbc_errormsg($conn_ord)));
-         exit;
+      if ($TipoConexao == 'PDO') {
+         try {
+            $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+         } catch (Exception $e) {
+            salvaLog(array("Erro ao tentar conectar PDO (Pas): " . htmlentities($e->getMessage())));
+            exit;
+         }
+
+         $ord = Consulta($Conn, $sql_os, $id);
+         unset($Conn);
+      } else {
+         ## Conecta ao ODBC
+         $conn_ord = odbc_connect($os_odb_ord !== NULL ? $os_odb_ord : $odbc_name, "", "");
+         
+         if (odbc_error()) {
+            salvaLog(array("Erro ao tentar conectar ODBC (Pas): " . odbc_errormsg($conn_ord)));
+            exit;
+         }
+
+         $exec_ord = odbc_exec($conn_ord, $sql_os);
+
+         if (odbc_error()) {
+            $mensagens = array();
+            $mensagens[] = "SQL (Pas): " . $sql_os;
+            $mensagens[] = "ERRO ODBC (Pas): " . odbc_errormsg($conn_ord);
+            salvalog($mensagens);
+            exit;
+         }
+
+         ## Busca Passagens
+         $ord = odbc_fetch_array($exec_ord, $id);
+         odbc_close($conn_ord);
+   
       }
-
-      $exec_ord = odbc_exec($conn_ord, $sql_os);
-
-      if (odbc_error()) {
-         $mensagens = array();
-         $mensagens[] = "SQL (Pas): " . $sql_os;
-         $mensagens[] = "ERRO ODBC (Pas): " . odbc_errormsg($conn_ord);
-         salvalog($mensagens);
-         exit;
-      }
       
-      //salvaLog(array("SQL (Pas): " . $sql_os));
-      //salvaLog(array('fetch: ' . print_r(odbc_fetch_array($exec_ord), true) ));
-      //salvaLog(array('Registros: ' . print_r(odbc_num_rows($exec_ord), true) ));
-      //exit;
-
-      ## Busca Passagens
-      //$id = 0;
-      //for ($id=0; $id < $regs; $id++) { 
-      //while ($ord = odbc_fetch_array($exec_ord, $id)) {
-      $ord = odbc_fetch_array($exec_ord, $id);
       $row_ord = array();
       foreach ($ord as $k => $v) {
          $row_ord[$k] = $v;
@@ -950,70 +1061,91 @@ do {
          $row_ord = change_key($row_ord, $value, $key);
       }
 
-      //salvaLog(array('$row_ord: ' . print_r($row_ord, true) ));
-      $os_id     = $row_ord['idipas'];
+      $os_id = $row_ord['idipas'];
+
+      if (empty($os_id)) {
+         break;
+      }
+
       $os_nome   = $row_ord['nome'];
-      
       $os_codcli = $row_ord['codcli'];
       
-      //$os_id   = odbc_result($exec_ord, $os_cam_ord['idipas']);
-      //$os_nome = odbc_result($exec_ord, $os_cam_ord['nome']);
-
       ## Verifica se o registro ja se encontra cadastrado
-      if ($implanta == 0) {
+      if ($saida !== 'Texto') {
          $parametros = array('pservico' => 'wfcpas',
-                           'pmetodo'  => 'VerOS',
-                           'pcodemp'  => $pcodemp,
-                           'pidipas'  => $os_id
-                           );
+                             'pmetodo'  => 'VerOS',
+                             'pcodemp'  => $pcodemp,
+                             'pidipas'  => $os_id
+                            );
          $salvaRet = enviaDados($url, $parametros);
-         $veros    = $salvaRet->ProDataSet;
+         $veros    = $salvaRet;
 
-         if (property_exists($veros, 'ttveros')) {
+         if (property_exists($veros, 'integrado')) {
             if ($veros->integrado == 'Sim') {
+               $ultpsg = $os_id;
                continue;
             }
          }
       }
 
       $vei_placa = $row_ord['placa'];
-      //$vei_placa = odbc_result($exec_ord, $os_cam_ord['placa']);
       $serv[$id]['os'] = $row_ord;
-      //salvaLog(array('$row_ord: ' . print_r($row_ord, true) ));
 
       ## Relatos
       $NRel = 0;
       if ($os_tab_rel != NULL && $os_id != NULL && $os_id != "") {
 
-         ## Conecta ao ODBC
-         if ($os_odb_rel !== NULL && $os_odb_rel !== $odbc_name) {
-            $conn_rel = odbc_connect($os_odb_rel, "", "");
-
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Rel): " . odbc_errormsg($conn_rel)));
+         $sql_rel = sprintf(sqlret($os_tab_rel, $os_cam_rel, $os_con_rel, $os_ord_rel), $os_id);
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_rel !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_rel->Server, $os_pdo_rel->Data, $os_pdo_rel->User, $os_pdo_rel->Password, $os_pdo_rel->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Rel): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $rel = Consulta($Conn, $sql_rel);
+            unset($Conn);
          } else {
-            $conn_rel = $conn;
+            ## Conecta ao ODBC
+            if ($os_odb_rel !== NULL && $os_odb_rel !== $odbc_name) {
+               $conn_rel = odbc_connect($os_odb_rel, "", "");
+
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Rel): " . odbc_errormsg($conn_rel)));
+                  exit;
+               }
+            } else {
+               $conn_rel = $conn;
+            }
+
+            $exec_rel = odbc_exec($conn_rel, $sql_rel);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Rel): " . $sql_rel;
+               $mensagens[] = "ERRO ODBC (Rel): " . odbc_errormsg($conn_rel);
+               salvaLog($mensagens);
+               exit;
+            }
+
+            $rel = array();
+            while ($tmp = odbc_fetch_array($exec_rel)) {
+               $rel[] = $tmp;
+            }
+
+            odbc_close($conn_rel);
          }
 
-         $sql_rel = sprintf(sqlret($os_tab_rel, $os_cam_rel, $os_con_rel, $os_ord_rel), $os_id);
-         //echo 'SQL Rel => ' . $sql_rel . '<br/>';
-         //exit;
-         $exec_rel = odbc_exec($conn_rel, $sql_rel);
+         $NRel = count($rel);
 
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Rel): " . $sql_rel;
-            $mensagens[] = "ERRO ODBC (Rel): " . odbc_errormsg($conn_rel);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         while ($rel = odbc_fetch_array($exec_rel)) {
-            //array_push($row_rel, $row_rel);
+         for ($x=0; $x < count($rel); $x++) { 
             $row_rel = array();
-            foreach ($rel as $k => $v) {
+            foreach ($rel[$x] as $k => $v) {
                $row_rel[$k] = $v;
             }
       
@@ -1022,149 +1154,199 @@ do {
             }
 
             $serv[$id]['os'][$id]['relatos'][] = $row_rel;
-            $NRel++;
          }
 
-         odbc_close($conn_rel);
       }
 
       ## Servicos
       $NSer = 0;
-      if ($os_tab_ser != NULL && $os_id != NULL && $os_id != "") {
-         
-         ## Conecta ao ODBC
-         if ($os_odb_ser !== NULL && $os_odb_ser !== $odbc_name) {
-            $conn_ser = odbc_connect($os_odb_ser, "", "");
+      if ($os_tab_ser !== NULL && $os_id !== NULL && $os_id !== "") {
+         $sql_ser = sprintf(sqlret($os_tab_ser, $os_cam_ser, $os_con_ser, $os_ord_ser), $os_id);
 
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Rel): " . odbc_errormsg($conn_ser)));
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_ser !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_ser->Server, $os_pdo_ser->Data, $os_pdo_ser->User, $os_pdo_ser->Password, $os_pdo_ser->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Ser): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $ser = Consulta($Conn, $sql_ser);
+            unset($Conn);
          } else {
-            $conn_ser = $conn;
+            ## Conecta ao ODBC
+            if ($os_odb_ser !== NULL && $os_odb_ser !== $odbc_name) {
+               $conn_ser = odbc_connect($os_odb_ser, "", "");
+
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Ser): " . odbc_errormsg($conn_ser)));
+                  exit;
+               }
+            } else {
+               $conn_ser = $conn;
+            }
+
+            $exec_ser = odbc_exec($conn_ser, $sql_ser);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Ser): " . $sql_ser;
+               $mensagens[] = "ERRO ODBC (Ser): " . odbc_errormsg($conn_ser);
+               salvaLog($mensagens);
+               exit;
+            }
+
+            $ser = array();
+            while ($tmp = odbc_fetch_array($exec_ser)) {
+               $ser[] = $tmp;
+            }
+
+            odbc_close($conn_ser);
          }
 
-         $sql_ser = sprintf(sqlret($os_tab_ser, $os_cam_ser, $os_con_ser, $os_ord_ser), $os_id);
-         //echo 'SQL Ser => ' . $sql_ser . '<br/>';
-         //exit;
-         $exec_ser = odbc_exec($conn_ser, $sql_ser);
+         $NSer = count($ser);
 
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Ser): " . $sql_ser;
-            $mensagens[] = "ERRO ODBC (Ser): " . odbc_errormsg($conn_ser);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         while ($ser = odbc_fetch_array($exec_ser)) {
-            //array_push($row_ser, $row_ser);
+         for ($x=0; $x < count($ser); $x++) { 
             $row_ser = array();
-            foreach ($ser as $k => $v) {
+            foreach ($ser[$x] as $k => $v) {
                $row_ser[$k] = $v;
             }
 
             foreach ($os_cam_ser as $key => $value) {
                $row_ser = change_key($row_ser, $value, $key);
             }
-
-            $servid = $row_ser['codser'];
-            //$servid = odbc_result($exec_ser, $os_cam_ser['codser']);
-
+            
             ## Servico
-            if ($os_tab_sev != NULL) {
+            $servid = $row_ser['codser'];
 
-               ## Conecta ao ODBC
-               if ($os_odb_sev !== NULL && $os_odb_sev !== $odbc_name) {
-                  $conn_sev = odbc_connect($os_odb_sev, "", "");
+            if ($os_tab_sev !== NULL) {
+               $sql_sev = sprintf(sqlret($os_tab_sev, $os_cam_sev, $os_con_sev, $os_ord_sev), $servid);
 
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Sev): " . odbc_errormsg($conn_sev)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_sev !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_sev->Server, $os_pdo_sev->Data, $os_pdo_sev->User, $os_pdo_sev->Password, $os_pdo_sev->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Sev): " . htmlentities($e->getMessage())));
                      exit;
                   }
-               } else {
-                  $conn_sev = $conn;
-               }
-
-               $sql_sev = sprintf(sqlret($os_tab_sev, $os_cam_sev, $os_con_sev, $os_ord_sev),$servid);
-               //echo 'SQL Sev => ' . $sql_sev . '<br/>';
-               //exit;
-               $exec_sev = odbc_exec($conn_sev, $sql_sev);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Sev): " . $sql_sev;
-                  $mensagens[] = "ERRO ODBC (Sev): " . odbc_errormsg($conn_sev);
-                  salvaLog($mensagens);
-                  exit;
-               }
-
-               while ($sev = (odbc_fetch_array($exec_sev))) {
-                  //array_push($row_sev, $row_sev);
-                  $row_sev = array();
-                  foreach ($sev as $k => $v) {
-                     $row_sev[$k] = $v;
-                  }
          
-                  foreach($os_cam_sev as $key => $value) {
-                     $row_sev = change_key($row_sev, $value, $key);
-                  }
-                  
-                  if (array_key_exists('descri', $os_cam_sev)) {
-                     $row_ser['descri'] = $row_sev['descri'];
-                     //$row_sev['descri'] = odbc_result($exec_sev, $os_cam_sev['descri']);
+                  $sev = Consulta($Conn, $sql_sev);
+                  unset($Conn);
+               } else {
+                  ## Conecta ao ODBC
+                  if ($os_odb_sev !== NULL && $os_odb_sev !== $odbc_name) {
+                     $conn_sev = odbc_connect($os_odb_sev, "", "");
+
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Sev): " . odbc_errormsg($conn_sev)));
+                        exit;
+                     }
+                  } else {
+                     $conn_sev = $conn;
                   }
 
-                  if (array_key_exists('quant', $os_cam_sev)) {
-                     $row_ser['quant'] = $row_sev['quant'];
-                     //$row_sev['quant'] = odbc_result($exec_sev, $os_cam_sev['quant']);
+                  $exec_sev = odbc_exec($conn_sev, $sql_sev);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Sev): " . $sql_sev;
+                     $mensagens[] = "ERRO ODBC (Sev): " . odbc_errormsg($conn_sev);
+                     salvaLog($mensagens);
+                     exit;
                   }
 
-                  $serv[$id]['os']['servicos'][] = $row_ser;
+                  $sev = array();
+                  while ($tmp = odbc_fetch_array($exec_sev)) {
+                     $sev[] = $tmp;
+                  }
+                  odbc_close($conn_sev);
                }
-               odbc_close($conn_sev);
+
+               $row_sev = array();
+               foreach ($sev[0] as $k => $v) {
+                  $row_sev[$k] = $v;
+               }
+      
+               foreach($os_cam_sev as $key => $value) {
+                  $row_sev = change_key($row_sev, $value, $key);
+               }
+               
+               if (array_key_exists('descri', $os_cam_sev)) {
+                  $row_ser['descri'] = $row_sev['descri'];
+               }
+
+               if (array_key_exists('quant', $os_cam_sev)) {
+                  $row_ser['quant'] = $row_sev['quant'];
+               }
+               $serv[$id]['os']['servicos'][] = $row_ser;
             } else {
-               //salvaLog(array($id . ' | ' . print_r($row_ser, true)));
                $serv[$id]['os']['servicos'][] = $row_ser;
             }
-            $NSer++;
          }
-         odbc_close($conn_ser);
       }
 
       ## Servicos Terceiros
       $NTer = 0;
       if ($os_tab_ter != NULL && $os_id != NULL && $os_id != "") {
          
-         ## Conecta ao ODBC
-         if ($os_odb_ter !== NULL && $os_odb_ter !== $odbc_name) {
-            $conn_ter = odbc_connect($os_odb_ter, "", "");
-
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Ter): " . odbc_errormsg($conn_ter)));
+         $sql_ter = sprintf(sqlret($os_tab_ter, $os_cam_ter, $os_con_ter, $os_ord_ter), $os_id);
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_ter !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_ter->Server, $os_pdo_ter->Data, $os_pdo_ter->User, $os_pdo_ter->Password, $os_pdo_ter->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Ter): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $ter = Consulta($Conn, $sql_ter);
+            unset($Conn);
          } else {
-            $conn_ter = $conn;
+            ## Conecta ao ODBC
+            if ($os_odb_ter !== NULL && $os_odb_ter !== $odbc_name) {
+               $conn_ter = odbc_connect($os_odb_ter, "", "");
+
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Ter): " . odbc_errormsg($conn_ter)));
+                  exit;
+               }
+            } else {
+               $conn_ter = $conn;
+            }
+
+            $exec_ter = odbc_exec($conn_ter, $sql_ter);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Ter): " . $sql_ter;
+               $mensagens[] = "ERRO ODBC (Ter): " . odbc_errormsg($conn_ter);
+               salvaLog($mensagens);
+               exit;
+            }
+            
+            $ter = array();
+            while ($tmp = odbc_fetch_array($exec_ter)) {
+               $ter[] = $tmp;
+            }
+            odbc_close($conn_ter);
          }
 
-         $sql_ter = sprintf(sqlret($os_tab_ter, $os_cam_ter, $os_con_ter, $os_ord_ter),$os_id);
-         //echo 'SQL ter => ' . $sql_ter . '<br/>';
-         //exit;
-         $exec_ter = odbc_exec($conn_ter, $sql_ter);
+         $NTer = count($ter);
 
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Ter): " . $sql_ter;
-            $mensagens[] = "ERRO ODBC (Ter): " . odbc_errormsg($conn_ter);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         while($ter = (odbc_fetch_array($exec_ter))) {
-            //array_push($row_ter, $row_ter);
+         for ($x=0; $x < count($ter); $x++) { 
             $row_ter = array();
-            foreach ($ter as $k => $v) {
+            foreach ($ter[$x] as $k => $v) {
                $row_ter[$k] = $v;
             }
       
@@ -1173,101 +1355,132 @@ do {
             }
 
             $servid = $row_ter['codser'];
-            //$servid = odbc_result($exec_ter, $os_cam_ter['codser']);
 
             ## Servico
-            if ($os_tab_sev != NULL) {
-
-               ## Conecta ao ODBC
-               if ($os_odb_sev !== NULL && $os_odb_sev !== $odbc_name) {
-                  $conn_sev = odbc_connect($os_odb_sev, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (TSev): " . odbc_errormsg($conn_sev)));
+            if ($os_tab_sev !== NULL) {
+               $sql_sev = sprintf(sqlret($os_tab_sev, $os_cam_sev, $os_con_sev, $os_ord_sev), $servid);
+               
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_sev !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_sev->Server, $os_pdo_sev->Data, $os_pdo_sev->User, $os_pdo_sev->Password, $os_pdo_sev->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (TSev): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $sev = Consulta($Conn, $sql_sev);
+                  unset($Conn);
                } else {
-                  $conn_sev = $conn;
+                  ## Conecta ao ODBC
+                  if ($os_odb_sev !== NULL && $os_odb_sev !== $odbc_name) {
+                     $conn_sev = odbc_connect($os_odb_sev, "", "");
+
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (TSev): " . odbc_errormsg($conn_sev)));
+                        exit;
+                     }
+                  } else {
+                     $conn_sev = $conn;
+                  }
+
+                  $exec_sev = odbc_exec($conn_sev, $sql_sev);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (TSev): " . $sql_sev;
+                     $mensagens[] = "ERRO ODBC (TSev): " . odbc_errormsg($conn_sev);
+                     salvaLog($mensagens);
+                     exit;
+                  }
+
+                  $sev = array();
+                  while ($tmp = odbc_fetch_array($exec_sev)) {
+                     $sev[] = $tmp;
+                  }
+                  odbc_close($conn_sev);
                }
 
-               $sql_sev = sprintf(sqlret($os_tab_sev, $os_cam_sev, $os_con_sev, $os_ord_sev),$servid);
-               //echo 'SQL Sev => ' . $sql_sev . '<br/>';
-               //exit;
-               $exec_sev = odbc_exec($conn_sev, $sql_sev);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (TSev): " . $sql_sev;
-                  $mensagens[] = "ERRO ODBC (TSev): " . odbc_errormsg($conn_sev);
-                  salvaLog($mensagens);
-                  exit;
+               $row_sev = array();
+               foreach ($sev[0] as $k => $v) {
+                  $row_sev[$k] = $v;
+               }
+                     
+               foreach($os_cam_sev as $key => $value) {
+                  $row_sev = change_key($row_sev, $value, $key);
+               }
+               
+               if (array_key_exists('descri', $os_cam_sev)) {
+                  $row_ter['descri'] = $row_sev['descri'];
                }
 
-               while ($sev = (odbc_fetch_array($exec_sev))) {
-                  //array_push($row_sev, $row_sev);
-                  $row_sev = array();
-                  foreach ($sev as $k => $v) {
-                     $row_sev[$k] = $v;
-                  }
-                        
-                  foreach($os_cam_sev as $key => $value) {
-                     $row_sev = change_key($row_sev, $value, $key);
-                  }
-                  
-                  if (array_key_exists('descri', $os_cam_sev)) {
-                     //$row_sev['descri'] = odbc_result($exec_sev, $os_cam_sev['descri']);
-                     $row_ter['descri'] = $row_sev['descri'];
-                  }
-
-                  if (array_key_exists('quant', $os_cam_sev)) {
-                     //$row_sev['quant'] = odbc_result($exec_sev, $os_cam_sev['quant']);
-                     $row_ter['quant']  = $row_sev['quant'];
-                  }
-                  
-                  $serv[$id]['os']['servicos'][] = $row_ter;
+               if (array_key_exists('quant', $os_cam_sev)) {
+                  $row_ter['quant'] = $row_sev['quant'];
                }
-               odbc_close($conn_sev);
+               $serv[$id]['os']['servicos'][] = $row_ter;
             } else {
                $serv[$id]['os']['servicos'][] = $row_ter;
             }
-            $NTer++;
          }
-         odbc_close($conn_ter);
       }
 
       ## Pecas
-      if ($os_tab_pec != NULL && $os_id != NULL && $os_id != "") {
+      if ($os_tab_pec !== NULL && $os_id !== NULL && $os_id !== "") {
+         $sql_pec = sprintf(sqlret($os_tab_pec, $os_cam_pec, $os_con_pec, $os_ord_pec), $os_id);
          
-         ## Conecta ao ODBC
-         if ($os_odb_pec !== NULL && $os_odb_pec !== $odbc_name) {
-            $conn_pec = odbc_connect($os_odb_pec, "", "");
-
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Pec): " . odbc_errormsg($conn_pec)));
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_pec !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_pec->Server, $os_pdo_pec->Data, $os_pdo_pec->User, $os_pdo_pec->Password, $os_pdo_pec->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Pec): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $pec = Consulta($Conn, $sql_pec);
+            unset($Conn);
          } else {
-            $conn_pec = $conn;
+            ## Conecta ao ODBC
+            if ($os_odb_pec !== NULL && $os_odb_pec !== $odbc_name) {
+               $conn_pec = odbc_connect($os_odb_pec, "", "");
+
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Pec): " . odbc_errormsg($conn_pec)));
+                  exit;
+               }
+            } else {
+               $conn_pec = $conn;
+            }
+
+            $exec_pec = odbc_exec($conn_pec, $sql_pec);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Pec): " . $sql_pec;
+               $mensagens[] = "ERRO ODBC (Pec): " . odbc_errormsg($conn_pec);
+               salvaLog($mensagens);
+               exit;
+            }
+
+            $pec = array();
+            while ($tmp = odbc_fetch_array($exec_pec)) {
+               $pec[] = $tmp;
+            }
+
+            odbc_close($conn_pec);
          }
 
-         $sql_pec = sprintf(sqlret($os_tab_pec, $os_cam_pec, $os_con_pec, $os_ord_pec),$os_id);
-         //echo 'SQL Pec => ' . $sql_pec . '<br/>';
-         //exit;
-         $exec_pec = odbc_exec($conn_pec, $sql_pec);
+         $NPec = count($pec);
 
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Pec): " . $sql_pec;
-            $mensagens[] = "ERRO ODBC (Pec): " . odbc_errormsg($conn_pec);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         $NPec = 0;
-         while ($pec = (odbc_fetch_array($exec_pec))) {
-            //array_push($row_pec, $row_pec);
+         for ($x=0; $x < count($pec); $x++) {
             $row_pec = array();
-            foreach ($pec as $k => $v) {
+            foreach ($pec[$x] as $k => $v) {
                $row_pec[$k] = $v;
             }
       
@@ -1276,68 +1489,79 @@ do {
             }
 
             $prodid = $row_pec['codpec'];
-
-            //$prodid = odbc_result($exec_pec, $os_cam_pec['codpec']);
             $prodid = str_replace("'", '', $prodid);
             $prodid = str_replace('"', '', $prodid);
 
             ## Produtos
-            if ($os_tab_pro != NULL && $prodid != NULL && $prodid != "") {
+            if ($os_tab_pro !== NULL && $prodid !== NULL && $prodid !== "") {
+               $sql_pro = sprintf(sqlret($os_tab_pro, $os_cam_pro, $os_con_pro, $os_ord_pro), $prodid);
                
-               ## Conecta ao ODBC
-               if ($os_odb_pro !== NULL && $os_odb_pro !== $odbc_name) {
-                  $conn_pro = odbc_connect($os_odb_pro, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Pro): " . odbc_errormsg($conn_pro)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_pro !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_pro->Server, $os_pdo_pro->Data, $os_pdo_pro->User, $os_pdo_pro->Password, $os_pdo_pro->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Pro): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $pro = Consulta($Conn, $sql_pro);
+                  unset($Conn);
                } else {
-                  $conn_pro = $conn;
+                  ## Conecta ao ODBC
+                  if ($os_odb_pro !== NULL && $os_odb_pro !== $odbc_name) {
+                     $conn_pro = odbc_connect($os_odb_pro, "", "");
+
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Pro): " . odbc_errormsg($conn_pro)));
+                        exit;
+                     }
+                  } else {
+                     $conn_pro = $conn;
+                  }
+
+                  $exec_pro = odbc_exec($conn_pro, $sql_pro);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Pro): " . $sql_pro;
+                     $mensagens[] = "ERRO ODBC (Pro): " . odbc_errormsg($conn_pro);
+                     salvaLog($mensagens);
+                     exit;
+                  }
+
+                  $pro = array();
+                  while ($tmp = odbc_fetch_array($exec_pro)) {
+                     $pro[] = $tmp;
+                  }
+                  odbc_close($conn_pro);
                }
 
-               $sql_pro = sprintf(sqlret($os_tab_pro, $os_cam_pro, $os_con_pro, $os_ord_pro), $prodid);
-               //salvaLog(array('SQL Pro => ' . $sql_pro . '$prodid: ' . $prodid));
-               $exec_pro = odbc_exec($conn_pro, $sql_pro);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Pro): " . $sql_pro;
-                  $mensagens[] = "ERRO ODBC (Pro): " . odbc_errormsg($conn_pro);
-                  salvaLog($mensagens);
-                  exit;
+               $row_pro = array();
+               foreach ($pro[0] as $k => $v) {
+                  $row_pro[$k] = $v;
+               }
+                     
+               foreach ($os_cam_pro as $key => $value) {
+                  $row_pro = change_key($row_pro, $value, $key);
                }
 
-               while ($pro = (odbc_fetch_array($exec_pro))) {
-                  //array_push($row_pro, $row_pro);
-                  $row_pro = array();
-                  foreach ($pro as $k => $v) {
-                     $row_pro[$k] = $v;
-                  }
-                        
-                  foreach ($os_cam_pro as $key => $value) {
-                     $row_pro = change_key($row_pro, $value, $key);
-                  }
-
-                  if (array_key_exists('quant', $os_cam_pro)) {
-                     $row_pec['quant'] = $row_pro['quant'];
-                  }
-
-                  if (array_key_exists('descri', $os_cam_pro)) {
-                     $row_pec['descri'] = $row_pro['descri'];
-                  }
-                  //$os_pec_qu = odbc_result($exec_pec, $os_cam_pec['quant']);
-                  //$row_pro['quant'] = $os_pec_qu;
-
-                  $serv[$id]['os']['pecas'][] = $row_pec;
+               if (array_key_exists('quant', $os_cam_pro)) {
+                  $row_pec['quant'] = $row_pro['quant'];
                }
-               odbc_close($conn_pro);
+
+               if (array_key_exists('descri', $os_cam_pro)) {
+                  $row_pec['descri'] = $row_pro['descri'];
+               }
+
+               $serv[$id]['os']['pecas'][] = $row_pec;
             } else {
                $serv[$id]['os']['pecas'][] = $row_pec;
             }
-            $NPec++;
          }
-         odbc_close($conn_pec);
       }
 
       ## Desconsidera passagens sem pecas ou servicos
@@ -1346,43 +1570,57 @@ do {
       }
 
       ## Veiculo
-      if ($os_tab_vei != NULL &&
-            (($os_id !== NULL && $os_id !== "") || ($vei_placa !== NULL && $vei_placa !== "")) ) {
-         
-         ## Conecta ao ODBC
-         if ($os_odb_vei !== NULL && $os_odb_vei !== $odbc_name) {
-            $conn_vei = odbc_connect($os_odb_vei, "", "");
+      if ($os_tab_vei != NULL && (($os_id !== NULL && $os_id !== "") || ($vei_placa !== NULL && $vei_placa !== "")) ) {
+         $sql_vei = sprintf(sqlret($os_tab_vei, $os_cam_vei, $os_con_vei, $os_ord_vei), ($os_con_vei[0]['Tipo'] == 'P' ? $vei_placa : $os_id) );
 
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Vei): " . odbc_errormsg($conn_vei)));
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_vei !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_vei->Server, $os_pdo_vei->Data, $os_pdo_vei->User, $os_pdo_vei->Password, $os_pdo_vei->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Vei): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $vei = Consulta($Conn, $sql_vei);
+            unset($Conn);
          } else {
-            $conn_vei = $conn;
+            ## Conecta ao ODBC
+            if ($os_odb_vei !== NULL && $os_odb_vei !== $odbc_name) {
+               $conn_vei = odbc_connect($os_odb_vei, "", "");
+
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Vei): " . odbc_errormsg($conn_vei)));
+                  exit;
+               }
+            } else {
+               $conn_vei = $conn;
+            }
+
+            $exec_vei = odbc_exec($conn_vei, $sql_vei);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Vei): " . $sql_vei;
+               $mensagens[] = "ERRO ODBC (Vei): " . odbc_errormsg($conn_vei);
+               salvaLog($mensagens);
+               exit;
+            }
+
+            $vei = array();
+            while ($tmp = odbc_fetch_array($exec_vei)) {
+               $vei[] = $tmp;
+            }
+
+            odbc_close($conn_vei);
          }
 
-         $sql_vei = sprintf(sqlret($os_tab_vei, $os_cam_vei, $os_con_vei, $os_ord_vei),
-                              ($os_con_vei[0]['Tipo'] == 'P' ? $vei_placa : $os_id) );
-
-         //salvaLog(array('$os_con_vei => ' . print_r($os_con_vei[0]['Tipo'], true)));
-
-         //salvaLog(array('SQL Vei => ' . $sql_vei));
-         //exit;
-         $exec_vei = odbc_exec($conn_vei, $sql_vei);
-
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Vei): " . $sql_vei;
-            $mensagens[] = "ERRO ODBC (Vei): " . odbc_errormsg($conn_vei);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         $vei_id = 0;
-         while ($vei = (odbc_fetch_array($exec_vei))) {
-            //array_push($row_vei, $row_vei);
+         for ($x=0; $x < count($vei); $x++) {
             $row_vei = array();
-            foreach ($vei as $k => $v) {
+            foreach ($vei[$x] as $k => $v) {
                $row_vei[$k] = $v;
             }
       
@@ -1390,386 +1628,470 @@ do {
                $row_vei = change_key($row_vei, $value, $key);
             }
 
-            //salvaLog(array('$row_vei => ' . print_r($row_vei, true) ));
-
-            $serv[$id]['os']['veiculo'][$vei_id] = $row_vei;
+            $serv[$id]['os']['veiculo'][$x] = $row_vei;
+            
             $cli_id = $row_vei['codcli'];
             $cor_id = $row_vei['corvei'];
             $cmb_id = $row_vei['cmbvei'];
             $mar_id = $row_vei['marca'];
             $mod_id = $row_vei['modelo'];
 
-            //$cli_id = odbc_result($exec_vei, $os_cam_vei['codcli']);
-            //$cor_id = odbc_result($exec_vei, $os_cam_vei['corvei']);
-            //$cmb_id = odbc_result($exec_vei, $os_cam_vei['cmbvei']);
-            //$mar_id = odbc_result($exec_vei, $os_cam_vei['marca']);
-            //$mod_id = odbc_result($exec_vei, $os_cam_vei['modelo']);
-
             ## Cor
-            //salvaLog(array("[".$os_id."] Cor_ID: ".$cor_id." => ".$os_cam_vei['corvei']));
             if ($os_tab_cor != NULL && $cor_id != NULL && $cor_id != "") {
+               $sql_cor = sprintf(sqlret($os_tab_cor, $os_cam_cor, $os_con_cor, $os_ord_cor), $cor_id);
                
-               ## Conecta ao ODBC
-               if ($os_odb_cor !== NULL && $os_odb_cor !== $odbc_name) {
-                  $conn_cor = odbc_connect($os_odb_cor, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Cor): " . odbc_errormsg($conn_cor)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_cor !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_cor->Server, $os_pdo_cor->Data, $os_pdo_cor->User, $os_pdo_cor->Password, $os_pdo_cor->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Cor): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $cor = Consulta($Conn, $sql_cor);
+                  unset($Conn);
                } else {
-                  $conn_cor = $conn;
-               }
+                  ## Conecta ao ODBC
+                  if ($os_odb_cor !== NULL && $os_odb_cor !== $odbc_name) {
+                     $conn_cor = odbc_connect($os_odb_cor, "", "");
 
-               $sql_cor = sprintf(sqlret($os_tab_cor, $os_cam_cor, $os_con_cor, $os_ord_cor), $cor_id);
-               //echo 'SQL Cor => ' . $sql_cor . '<br/>';
-               //exit;
-               $exec_cor = odbc_exec($conn_cor, $sql_cor);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Cor): " . $sql_cor;
-                  $mensagens[] = "ERRO ODBC (Cor): " . odbc_errormsg($conn_cor);
-                  salvaLog($mensagens);
-                  exit;
-               }
-
-               while ($cor = (odbc_fetch_array($exec_cor))) {
-                  //array_push($row_cor, $row_cor);
-                  $row_cor = array();
-                  foreach ($cor as $k => $v) {
-                     $row_cor[$k] = $v;
-                  }
-                        
-                  foreach($os_cam_cor as $key => $value) {
-                     $row_cor = change_key($row_cor, $value, $key);
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Cor): " . odbc_errormsg($conn_cor)));
+                        exit;
+                     }
+                  } else {
+                     $conn_cor = $conn;
                   }
 
-                  if (array_key_exists('descri', $row_cor)) {
-                     $serv[$id]['os']['veiculo'][$vei_id]['corvei'] = $row_cor['descri'];
+                  $exec_cor = odbc_exec($conn_cor, $sql_cor);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Cor): " . $sql_cor;
+                     $mensagens[] = "ERRO ODBC (Cor): " . odbc_errormsg($conn_cor);
+                     salvaLog($mensagens);
+                     exit;
                   }
+                  
+                  $cor = array();
+                  while ($tmp = odbc_fetch_array($exec_cor)) {
+                     $cor[] = $tmp;
+                  }
+                  odbc_close($conn_cor);
                }
-               odbc_close($conn_cor);
+
+               $row_cor = array();
+               foreach ($cor[0] as $k => $v) {
+                  $row_cor[$k] = $v;
+               }
+                     
+               foreach($os_cam_cor as $key => $value) {
+                  $row_cor = change_key($row_cor, $value, $key);
+               }
+
+               if (array_key_exists('descri', $row_cor)) {
+                  $serv[$id]['os']['veiculo'][$x]['corvei'] = $row_cor['descri'];
+               }
             }
 
             ## Combustivel
             if ($os_tab_cmb!= NULL && $cmb_id != NULL && $cmb_id != "") {
+               $sql_cmb = sprintf(sqlret($os_tab_cmb, $os_cam_cmb, $os_con_cmb, $os_ord_cmb), $cmb_id);
                
-               ## Conecta ao ODBC
-               if ($os_odb_cmb !== NULL && $os_odb_cmb !== $odbc_name) {
-                  $conn_cmb = odbc_connect($os_odb_cmb, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Cmb): " . odbc_errormsg($conn_cmb)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_cmb !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_cmb->Server, $os_pdo_cmb->Data, $os_pdo_cmb->User, $os_pdo_cmb->Password, $os_pdo_cmb->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Cmb): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $cmb = Consulta($Conn, $sql_cmb);
+                  unset($Conn);
                } else {
-                  $conn_cmb = $conn;
-               }
+                  ## Conecta ao ODBC
+                  if ($os_odb_cmb !== NULL && $os_odb_cmb !== $odbc_name) {
+                     $conn_cmb = odbc_connect($os_odb_cmb, "", "");
 
-               //salvaLog(array("[".$os_id."] Cmb_ID: ".$cmb_id));
-               $sql_cmb = sprintf(sqlret($os_tab_cmb, $os_cam_cmb, $os_con_cmb, $os_ord_cmb), $cmb_id);
-               //salvaLog(array("[".$os_id."] Sql_cmb: ".$sql_cmb));
-               //echo 'SQL Cmb => ' . $sql_cmb . '<br/>';
-               //exit;
-               $exec_cmb = odbc_exec($conn, $sql_cmb);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Cor): " . $sql_cmb;
-                  $mensagens[] = "ERRO ODBC (Cor): " . odbc_errormsg($conn_cmb);
-                  salvaLog($mensagens);
-                  exit;
-               }
-
-               while ($cmb = (odbc_fetch_array($exec_cmb))) {
-                  //array_push($row_cmb, $row_cmb);
-                  $row_cmb = array();
-                  foreach ($cmb as $k => $v) {
-                     $row_cmb[$k] = $v;
-                  }
-                        
-                  foreach($os_cam_cmb as $key => $value) {
-                     $row_cmb = change_key($row_cmb, $value, $key);
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Cmb): " . odbc_errormsg($conn_cmb)));
+                        exit;
+                     }
+                  } else {
+                     $conn_cmb = $conn;
                   }
 
-                  if (array_key_exists('descri', $row_cmb)) {
-                     $serv[$id]['os']['veiculo'][$vei_id]['cmbvei'] = $row_cmb['descri'];
+                  $exec_cmb = odbc_exec($conn, $sql_cmb);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Cor): " . $sql_cmb;
+                     $mensagens[] = "ERRO ODBC (Cor): " . odbc_errormsg($conn_cmb);
+                     salvaLog($mensagens);
+                     exit;
                   }
+                  
+                  $cmb = array();
+                  while ($tmp = odbc_fetch_array($exec_cmb)) {
+                     $cmb[] = $tmp;
+                  }
+                  odbc_close($conn_cmb);
                }
-               odbc_close($conn_cmb);
+
+               $row_cmb = array();
+               foreach ($cmb[0] as $k => $v) {
+                  $row_cmb[$k] = $v;
+               }
+                     
+               foreach($os_cam_cmb as $key => $value) {
+                  $row_cmb = change_key($row_cmb, $value, $key);
+               }
+
+               if (array_key_exists('descri', $row_cmb)) {
+                  $serv[$id]['os']['veiculo'][$x]['cmbvei'] = $row_cmb['descri'];
+               }
             }
 
             ## Marca
             if ($os_tab_mar!= NULL && $mar_id != NULL && $mar_id != "") {
+               $sql_mar = sprintf(sqlret($os_tab_mar, $os_cam_mar, $os_con_mar, $os_ord_mar), $mar_id);
                
-               ## Conecta ao ODBC
-               if ($os_odb_mar !== NULL && $os_odb_mar !== $odbc_name) {
-                  $conn_mar = odbc_connect($os_odb_mar, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Mar): " . odbc_errormsg($conn_mar)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_mar !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_mar->Server, $os_pdo_mar->Data, $os_pdo_mar->User, $os_pdo_mar->Password, $os_pdo_mar->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Mar): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $mar = Consulta($Conn, $sql_mar);
+                  unset($Conn);
                } else {
-                  $conn_mar = $conn;
-               }
+                  ## Conecta ao ODBC
+                  if ($os_odb_mar !== NULL && $os_odb_mar !== $odbc_name) {
+                     $conn_mar = odbc_connect($os_odb_mar, "", "");
 
-               $sql_mar = sprintf(sqlret($os_tab_mar, $os_cam_mar, $os_con_mar, $os_ord_mar), $mar_id);
-               //echo 'SQL Mar => ' . $sql_mar . '<br/>';
-               //exit;
-               $exec_mar = odbc_exec($conn_mar, $sql_mar);
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Mar): " . odbc_errormsg($conn_mar)));
+                        exit;
+                     }
+                  } else {
+                     $conn_mar = $conn;
+                  }
 
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Mar): " . $sql_mar;
-                  $mensagens[] = "ERRO ODBC (Mar): " . odbc_errormsg($conn_mar);
-                  salvaLog($mensagens);
-                  exit;
-               }
+                  $exec_mar = odbc_exec($conn_mar, $sql_mar);
 
-               while ($mar = (odbc_fetch_array($exec_mar))) {
-                  //array_push($row_mar, $row_mar);
-                  $row_mar = array();
-                  foreach ($mar as $k => $v) {
-                     $row_mar[$k] = $v;
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Mar): " . $sql_mar;
+                     $mensagens[] = "ERRO ODBC (Mar): " . odbc_errormsg($conn_mar);
+                     salvaLog($mensagens);
+                     exit;
                   }
                   
-                  foreach($os_cam_mar as $key => $value) {
-                     $row_mar = change_key($row_mar, $value, $key);
+                  $mar = array();
+                  while ($tmp = odbc_fetch_array($exec_mar)) {
+                     $mar[] = $tmp;
                   }
-
-                  if (array_key_exists('descri', $row_mar)) {
-                     $serv[$id]['os']['veiculo'][$vei_id]['marca'] = $row_mar['descri'];
-                  }
+                  odbc_close($conn_mar);
                }
-               odbc_close($conn_mar);
+
+               $row_mar = array();
+               foreach ($mar[0] as $k => $v) {
+                  $row_mar[$k] = $v;
+               }
+               
+               foreach($os_cam_mar as $key => $value) {
+                  $row_mar = change_key($row_mar, $value, $key);
+               }
+
+               if (array_key_exists('descri', $row_mar)) {
+                  $serv[$id]['os']['veiculo'][$x]['marca'] = $row_mar['descri'];
+               }
             }
 
             ## Modelo
             if ($os_tab_mod!= NULL && $mod_id != NULL && $mod_id != "") {
+               $sql_mod = sprintf(sqlret($os_tab_mod, $os_cam_mod, $os_con_mod, $os_ord_mod), $mod_id);
                
-               ## Conecta ao ODBC
-               if ($os_odb_mod !== NULL && $os_odb_mod !== $odbc_name) {
-                  $conn_mod = odbc_connect($os_odb_mod, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Mod): " . odbc_errormsg($conn_mod)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_mod !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_mod->Server, $os_pdo_mod->Data, $os_pdo_mod->User, $os_pdo_mod->Password, $os_pdo_mod->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Mod): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $mod = Consulta($Conn, $sql_mod);
+                  unset($Conn);
                } else {
-                  $conn_mod = $conn;
-               }
+                  ## Conecta ao ODBC
+                  if ($os_odb_mod !== NULL && $os_odb_mod !== $odbc_name) {
+                     $conn_mod = odbc_connect($os_odb_mod, "", "");
 
-               $sql_mod = sprintf(sqlret($os_tab_mod, $os_cam_mod, $os_con_mod, $os_ord_mod), $mod_id);
-               //echo 'SQL Mod => ' . $sql_mod . '<br/>';
-               //exit;
-               $exec_mod = odbc_exec($conn_mod, $sql_mod);
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Mod): " . odbc_errormsg($conn_mod)));
+                        exit;
+                     }
+                  } else {
+                     $conn_mod = $conn;
+                  }
 
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Mod): " . $sql_mod;
-                  $mensagens[] = "ERRO ODBC (Mod): " . odbc_errormsg($conn_mod);
-                  salvaLog($mensagens);
-                  exit;
-               }
+                  $exec_mod = odbc_exec($conn_mod, $sql_mod);
 
-               while ($mod = (odbc_fetch_array($exec_mod))) {
-                  //array_push($row_mod, $row_mod);
-                  $row_mod = array();
-                  foreach ($mod as $k => $v) {
-                     $row_mod[$k] = $v;
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Mod): " . $sql_mod;
+                     $mensagens[] = "ERRO ODBC (Mod): " . odbc_errormsg($conn_mod);
+                     salvaLog($mensagens);
+                     exit;
                   }
                   
-                  foreach($os_cam_mod as $key => $value) {
-                     $row_mod = change_key($row_mod, $value, $key);
+                  $mod = array();
+                  while ($tmp = odbc_fetch_array($exec_mod)) {
+                     $mod[] = $tmp;
                   }
-
-                  if (array_key_exists('descri', $row_mod)) {
-                     $serv[$id]['os']['veiculo'][$vei_id]['modelo'] = $row_mod['descri'];
-                  }
+                  odbc_close($conn_mod);
                }
-               odbc_close($conn_mod);
+
+               $row_mod = array();
+               foreach ($mod[0] as $k => $v) {
+                  $row_mod[$k] = $v;
+               }
+               
+               foreach($os_cam_mod as $key => $value) {
+                  $row_mod = change_key($row_mod, $value, $key);
+               }
+
+               if (array_key_exists('descri', $row_mod)) {
+                  $serv[$id]['os']['veiculo'][$x]['modelo'] = $row_mod['descri'];
+               }
             }
 
-            $vei_tmp = $serv[$id]['os']['veiculo'][$vei_id];
+            $vei_tmp = $serv[$id]['os']['veiculo'][$x];
             $descri  = '';
-            if ($serv[$id]['os']['veiculo'][$vei_id]['descri'] == '') {
+            if ($serv[$id]['os']['veiculo'][$x]['descri'] == '') {
                if (array_key_exists('descri', $vei_tmp) || empty($vei_tmp['descri'])) {
                   $descri .= (array_key_exists('marca', $vei_tmp) ? $vei_tmp['marca'] . ' ' : '');
                   $descri .= (array_key_exists('modelo', $vei_tmp) ? $vei_tmp['modelo'] . ' ' : '');
                   $descri .= (array_key_exists('versao', $vei_tmp) ? $vei_tmp['versao'] . ' ' : '');
-                  $serv[$id]['os']['veiculo'][$vei_id]['descri'] = $descri;
+                  $serv[$id]['os']['veiculo'][$x]['descri'] = $descri;
                }
             }
 
             ## Cliente
-            if ($os_tab_cli!= NULL && $cli_id != NULL && $cli_id != "") {
+            if ($os_tab_cli!== NULL && $cli_id !== NULL && $cli_id !== "") {
+               $sql_cli = sprintf(sqlret($os_tab_cli, $os_cam_cli, $os_con_cli, $os_ord_cli), $cli_id);
                
-               ## Conecta ao ODBC
-               if ($os_odb_cli !== NULL && $os_odb_cli !== $odbc_name) {
-                  $conn_cli = odbc_connect($os_odb_cli, "", "");
-
-                  if (odbc_error()) {
-                     salvaLog(array("Erro ao tentar conectar ODBC (Cli): " . odbc_errormsg($conn_cli)));
+               if ($TipoConexao == 'PDO') {
+                  try {
+                     if ($os_pdo_cli !== NULL) {
+                        $Conn = Conecta(TIPO_DB, $os_pdo_cli->Server, $os_pdo_cli->Data, $os_pdo_cli->User, $os_pdo_cli->Password, $os_pdo_cli->Port);
+                     } else {
+                        $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                     }
+                  } catch (Exception $e) {
+                     salvaLog(array("Erro ao tentar conectar PDO (Cli): " . htmlentities($e->getMessage())));
                      exit;
                   }
+         
+                  $cli = Consulta($Conn, $sql_cli);
+                  unset($Conn);
                } else {
-                  $conn_cli = $conn;
+                  ## Conecta ao ODBC
+                  if ($os_odb_cli !== NULL && $os_odb_cli !== $odbc_name) {
+                     $conn_cli = odbc_connect($os_odb_cli, "", "");
+
+                     if (odbc_error()) {
+                        salvaLog(array("Erro ao tentar conectar ODBC (Cli): " . odbc_errormsg($conn_cli)));
+                        exit;
+                     }
+                  } else {
+                     $conn_cli = $conn;
+                  }
+
+                  $exec_cli = odbc_exec($conn_cli, $sql_cli);
+
+                  if (odbc_error()) {
+                     $mensagens = array();
+                     $mensagens[] = "SQL (Cli): " . $sql_cli;
+                     $mensagens[] = "ERRO ODBC (Cli): " . odbc_errormsg($conn_cli);
+                     salvaLog($mensagens);
+                     exit;
+                  }
+                  
+                  $cli = array();
+                  while ($tmp = odbc_fetch_array($exec_cli)) {
+                     $cli[] = $tmp;
+                  }
+                  odbc_close($conn_cli);
                }
 
-               $sql_cli = sprintf(sqlret($os_tab_cli, $os_cam_cli, $os_con_cli, $os_ord_cli), $cli_id);
-               //echo 'SQL Cli => ' . $sql_cli . '<br/>';
-               //exit;
-               $exec_cli = odbc_exec($conn_cli, $sql_cli);
-
-               if (odbc_error()) {
-                  $mensagens = array();
-                  $mensagens[] = "SQL (Cli): " . $sql_cli;
-                  $mensagens[] = "ERRO ODBC (Cli): " . odbc_errormsg($conn_cli);
-                  salvaLog($mensagens);
-                  exit;
-               }
-
-               $id_cli = 0;
-               while ($cli = (odbc_fetch_array($exec_cli))) {
-                  //array_push($row_cli, $row_cli);
+               for ($y=0; $y < count($cli); $y++) {
                   $row_cli = array();
-                  foreach ($cli as $k => $v) {
+                  foreach ($cli[$y] as $k => $v) {
                      $row_cli[$k] = $v;
                   }
                   
                   foreach($os_cam_cli as $key => $value) {
                      $row_cli = change_key($row_cli, $value, $key);
                   }
-                  $serv[$id]['os']['cliente'][$id_cli] = $row_cli;
+                  $serv[$id]['os']['cliente'][$y] = $row_cli;
 
                   ## Email
                   if ($os_tab_ema != NULL) {
+                     $sql_ema = sprintf(sqlret($os_tab_ema, $os_cam_ema, $os_con_ema, $os_ord_ema), $cli_id);
                
-                     ## Conecta ao ODBC
-                     if ($os_odb_ema !== NULL && $os_odb_ema !== $odbc_name) {
-                        $conn_ema = odbc_connect($os_odb_ema, "", "");
-
-                        if (odbc_error()) {
-                           salvaLog(array("Erro ao tentar conectar ODBC (ema): " . odbc_errormsg($conn_ema)));
+                     if ($TipoConexao == 'PDO') {
+                        try {
+                           if ($os_pdo_ema !== NULL) {
+                              $Conn = Conecta(TIPO_DB, $os_pdo_ema->Server, $os_pdo_ema->Data, $os_pdo_ema->User, $os_pdo_ema->Password, $os_pdo_ema->Port);
+                           } else {
+                              $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+                           }
+                        } catch (Exception $e) {
+                           salvaLog(array("Erro ao tentar conectar PDO (Ema): " . htmlentities($e->getMessage())));
                            exit;
                         }
+               
+                        $ema = Consulta($Conn, $sql_ema);
+                        unset($Conn);
                      } else {
-                        $conn_ema = $conn;
-                     }
+                        ## Conecta ao ODBC
+                        if ($os_odb_ema !== NULL && $os_odb_ema !== $odbc_name) {
+                           $conn_ema = odbc_connect($os_odb_ema, "", "");
 
-                     $sql_ema = sprintf(sqlret($os_tab_ema, $os_cam_ema, $os_con_ema, $os_ord_ema), $cli_id);
-                     //echo 'SQL Ema => ' . $sql_ema . '<br/>';
-                     //exit;
-                     $exec_ema = odbc_exec($conn_ema, $sql_ema);
-
-                     if (odbc_error()) {
-                        $mensagens = array();
-                        $mensagens[] = "SQL (Ema): " . $sql_ema;
-                        $mensagens[] = "ERRO ODBC (Ema): " . odbc_errormsg($conn_ema);
-                        salvaLog($mensagens);
-                        exit;
-                     }
-
-                     while ($ema = (odbc_fetch_array($exec_ema))) {
-                        //array_push($row_ema, $row_ema);
-                        $row_ema = array();
-                        foreach ($ema as $k => $v) {
-                           $row_ema[$k] = $v;
-                        }
-                              
-                        foreach($os_cam_ema as $key => $value) {
-                           $row_ema = change_key($row_ema, $value, $key);
+                           if (odbc_error()) {
+                              salvaLog(array("Erro ao tentar conectar ODBC (ema): " . odbc_errormsg($conn_ema)));
+                              exit;
+                           }
+                        } else {
+                           $conn_ema = $conn;
                         }
 
-                        if (array_key_exists('e_mail', $row_ema)) {
-                           $serv[$id]['os']['cliente'][$id_cli]['e_mail'] = $row_ema['e_mail'];
+                        $exec_ema = odbc_exec($conn_ema, $sql_ema);
+
+                        if (odbc_error()) {
+                           $mensagens = array();
+                           $mensagens[] = "SQL (Ema): " . $sql_ema;
+                           $mensagens[] = "ERRO ODBC (Ema): " . odbc_errormsg($conn_ema);
+                           salvaLog($mensagens);
+                           exit;
                         }
+                  
+                        $ema = array();
+                        while ($tmp = odbc_fetch_array($exec_ema)) {
+                           $ema[] = $tmp;
+                        }
+                        odbc_close($conn_ema);
                      }
-                     odbc_close($conn_ema);
+
+                     $row_ema = array();
+                     foreach ($ema[0] as $k => $v) {
+                        $row_ema[$k] = $v;
+                     }
+                           
+                     foreach($os_cam_ema as $key => $value) {
+                        $row_ema = change_key($row_ema, $value, $key);
+                     }
+
+                     if (array_key_exists('e_mail', $row_ema)) {
+                        $serv[$id]['os']['cliente'][$y]['e_mail'] = $row_ema['e_mail'];
+                     }
                   }
-                  $id_cli++;
                }
 
-               odbc_close($conn_cli);
             }
-            $vei_id++;
             break;
          }
-         odbc_close($conn_pec);
       }
 
       ## Cliente
-      //salvaLog(array(' $os_nome => ' . $os_nome
-      //. ' $os_tab_cli => ' . $os_tab_cli
-      //));
-      if ($os_tab_cli != NULL && 
-            ($os_nome != NULL && $os_nome != "") || ($os_codcli != NULL && $os_codcli != "")) {
+      if ($os_tab_cli != NULL && ($os_nome != NULL && $os_nome != "") || ($os_codcli != NULL && $os_codcli != "")) {
+         $sql_cli = sprintf(sqlret($os_tab_cli, $os_cam_cli, $os_con_cli, $os_ord_cli), (!empty($os_codcli) ? $os_codcli : $os_nome));
          
-         ## Conecta ao ODBC
-         if ($os_odb_cli !== NULL && $os_odb_cli !== $odbc_name) {
-            $conn_cli = odbc_connect($os_odb_cli, "", "");
-
-            if (odbc_error()) {
-               salvaLog(array("Erro ao tentar conectar ODBC (Cli1): " . odbc_errormsg($conn_cli)));
+         if ($TipoConexao == 'PDO') {
+            try {
+               if ($os_pdo_cli !== NULL) {
+                  $Conn = Conecta(TIPO_DB, $os_pdo_cli->Server, $os_pdo_cli->Data, $os_pdo_cli->User, $os_pdo_cli->Password, $os_pdo_cli->Port);
+               } else {
+                  $Conn = Conecta(TIPO_DB, $PDO->Server, $PDO->Data, $PDO->User, $PDO->Password, $PDO->Port);
+               }
+            } catch (Exception $e) {
+               salvaLog(array("Erro ao tentar conectar PDO (Cli): " . htmlentities($e->getMessage())));
                exit;
             }
+   
+            $cli = Consulta($Conn, $sql_cli);
+            unset($Conn);
          } else {
-            $conn_cli = $conn;
-         }
+            ## Conecta ao ODBC
+            if ($os_odb_cli !== NULL && $os_odb_cli !== $odbc_name) {
+               $conn_cli = odbc_connect($os_odb_cli, "", "");
 
-         if (!empty($os_codcli)) {
-            $sql_cli = sprintf(sqlret($os_tab_cli, $os_cam_cli, $os_con_cli, $os_ord_cli), $os_codcli);
-            //salvaLog(array('SQL Cli(1) => ' . $sql_cli));
-         } else {
-            $sql_cli = sprintf(sqlret($os_tab_cli, $os_cam_cli, $os_con_cli, $os_ord_cli), $os_nome);
-            //salvaLog(array('SQL Cli(2) => ' . $sql_cli));
-         } 
-         //salvaLog(array('SQL Cli(1) => ' . $sql_cli));
-            //exit;
-         $exec_cli = odbc_exec($conn_cli, $sql_cli);
-
-         if (odbc_error()) {
-            $mensagens = array();
-            $mensagens[] = "SQL (Cli1): " . $sql_cli;
-            $mensagens[] = "ERRO ODBC (Cli1): " . odbc_errormsg($conn_cli);
-            salvaLog($mensagens);
-            exit;
-         }
-
-         while ($cli = (odbc_fetch_array($exec_cli))) {
-            //array_push($row_cli, $row_cli);
-            $row_cli = array();
-            foreach ($cli as $k => $v) {
-               $row_cli[$k] = $v;
+               if (odbc_error()) {
+                  salvaLog(array("Erro ao tentar conectar ODBC (Cli1): " . odbc_errormsg($conn_cli)));
+                  exit;
+               }
+            } else {
+               $conn_cli = $conn;
             }
 
-            foreach($os_cam_cli as $key => $value) {
-               $row_cli = change_key($row_cli, $value, $key);
+            $exec_cli = odbc_exec($conn_cli, $sql_cli);
+
+            if (odbc_error()) {
+               $mensagens = array();
+               $mensagens[] = "SQL (Cli1): " . $sql_cli;
+               $mensagens[] = "ERRO ODBC (Cli1): " . odbc_errormsg($conn_cli);
+               salvaLog($mensagens);
+               exit;
             }
-            $serv[$id]['os']['cliente'][] = $row_cli;
+                  
+            $cli = array();
+            while ($tmp = odbc_fetch_array($exec_cli)) {
+               $cli[] = $tmp;
+            }
+            odbc_close($conn_cli);
          }
 
-         odbc_close($conn_cli);
+         $row_cli = array();
+         foreach ($cli[0] as $k => $v) {
+            $row_cli[$k] = $v;
+         }
+
+         foreach($os_cam_cli as $key => $value) {
+            $row_cli = change_key($row_cli, $value, $key);
+         }
+         $serv[$id]['os']['cliente'][] = $row_cli;
       }
 
-      //salvaLog(array('$ultpsg: '.$ultpsg.' | $os_id: ' .$os_id));
-      
       if ($implanta != 0) {
          $ultpsg = $os_id;
-         //salvaLog(array($os_id . '  (' . $ultpsg . ')'));
       }
 
-      //$id++;
-      //salvaLog(array('$ultpsg-1: '.$ultpsg.' | $id: '.$id));
    }
-   //salvaLog(array('$ultpsg-2: '.$ultpsg.' | $id: '.$id));
 
-   odbc_close($conn_ord);
-   
-   if ($saida != 'Texto') {
+   if ($saida !== 'Texto' || count($serv) <= 0) {
       salvaLog(array(count($serv) . ' Registro(s) carregados para envio... (' . $ultpsg . ')'));
+      if (count($serv) <= 0) {
+         exit(0);
+      }
    } else {
       //salvaLog(array(count($serv) . ' Registro(s) carregados para extracao... (' . $ultpsg . ')'));
    }
@@ -1794,16 +2116,21 @@ do {
    //exit;
 
    ## Sincroniza as Passagens com a Ficha do Carro
-   for ($i = 0;$i < count($serv); $i++) {
+   for ($i = 0;$i <= count($serv); $i++) {
       $os = $serv[$i]['os'];
-      //echo '<pre>';
-      //print_r($os);
-      //echo '</pre><br/>';
-      //exit;
 
       $pidipas = $os['idipas'];
 
       if ($pidipas == "") continue;
+      
+      $placa = trim($os['placa']);
+      
+      if (empty($placa)) continue;
+
+      $placa = str_replace('-', '', $placa);
+      $placa = str_replace(' ', '', $placa);
+      
+      if (strlen($placa) !== 7) continue;
 
       ## Passagem
       $ordem = array();
@@ -1813,11 +2140,6 @@ do {
          $ordem[0]['chassi'] = (array_key_exists('chassi', $os) ? $os['chassi'] : '');
          $ordem[0]['km']     = (array_key_exists('km', $os)     ? $os['km']     : '');
       } else {
-         //salvaLog(array(print_r($os['km'], true)));
-         //if ($ordem[0]['placa']  == '') {$ordem[0]['placa']  = $os['veiculo'][0]['placa'];}
-         //if ($ordem[0]['chassi'] == '') {$ordem[0]['chassi'] = $os['veiculo'][0]['chassi'];}
-         //if ($ordem[0]['km']     == '') {$ordem[0]['km']     = $os['veiculo'][0]['km'];}
-
          $ordem[0]['placa']  = (array_key_exists('placa', $os)  ? $os['placa']  : $os['veiculo'][0]['placa']);
          $ordem[0]['chassi'] = (array_key_exists('chassi', $os) ? $os['chassi'] : $os['veiculo'][0]['chassi']);
          $ordem[0]['km']     = (array_key_exists('km', $os)     ? $os['km']     : $os['veiculo'][0]['km']);
@@ -1826,9 +2148,6 @@ do {
       if (is_numeric($ordem[0]['km'])) {
          $ordem[0]['km'] = intval($ordem[0]['km']);
       }
-
-      //$ordem[0]['km'] = str_replace('.', '', $ordem[0]['km']);
-      //$ordem[0]['km'] = str_replace(',', '', $ordem[0]['km']);
 
       $ordem[0]['dtpsg']  = date("d/m/Y", strtotime($os['dtpsg']));
 
@@ -2169,34 +2488,72 @@ do {
    //exit;
 
    ## Tempo em espera para a proxima execucao
-   if ($saida != 'Texto') {
+   if ($saida !== 'Texto') {
+      $serv = NULL;
+
+      if (($pidipas >= $ultpsg_geral) || ($pidipas === "") ) {
+
+         if ($pidipas !== "") {
+            salvaLog(array('Final - OS Atual: ' . ($pidipas == "" ? $ultpsg : $pidipas)
+                        . ' Ultima OS: ' . $ultpsg 
+                        . ' : ' . $Extraidos 
+                        . ' Extraidos...'));
+            
+            salvaLog(array('(0) Ultima OS: ' . $pidipas . ' <=> ' . $ultpsg_geral));
+         
+            if($pidipas == $ultpsg_geral || $pidipas === "") {
+               $Fim = 1;
+               salvaLog(array('(1) Ultima OS: ' . $ultpsg_geral));
+               exit;
+            }
+         } else {
+            $Fim = 1;
+            salvaLog(array('(2) Ultima OS: ' . $ultpsg . '/' . $ultpsg_geral));
+            exit;
+         }
+      }
+
       if ((($t_pass * 60) < $tempo) && $Fim <= 0) {
          $t = $tempo - ($t_pass * 60);
 
          sleep($t);
 
-         $Inicio = date('H:i:s');
+         //$Inicio = date('H:i:s');
          $mensagens = array($Inicio . ' - '
                           . $Atual  . ' - '
                           . $t_pass . ' - '
                           . $tempo  . ' - '
-                          . ($t_pass * 60));
+                          . ($t_pass * 60)) . ' - '
+                          . $ultpsg  . ' - '
+                          . $ultpsg_geral;
          salvaLog($mensagens);
       }
    } else {
 
       $serv = NULL;
 
-      if (($pidipas >= $Ultima_os - $rba) || ($pidipas == "") ) {
-         $Fim = 1;
+      if (($pidipas >= $ultpsg_geral) || ($pidipas == "") ) {
 
-         $mensagens = array('Final OS Atual: ' . $pidipas . ' Ultima OS: ' . $Ultima_os . ' : ' . $Extraidos . ' Extraidos...');
-         salvaLog($mensagens);
-         break;
+         if ($pidipas !== "") {
+            //salvaLog(array('Final - OS Atual: ' . $pidipas 
+            //            . ' Ultima OS: ' . $ultpsg 
+            //            . ' : ' . $Extraidos 
+            //            . ' Extraidos...'));
+            if($pidipas == $ultpsg_geral) {
+               $Fim = 1;
+               salvaLog(array('(3) Ultima OS: ' . $ultpsg_geral));
+               exit;
+            }
+         } else {
+            $Fim = 1;
+            salvaLog(array('(4) Ultima OS: ' . $ultpsg));
+            exit;
+         }
       }
 
-      $mensagens = array('OS Atual: ' . $pidipas . ' Ultima OS: ' . $Ultima_os . ' : ' . $Extraidos . ' Extraidos...');
-      salvaLog($mensagens);
+      salvaLog(array('OS Atual: ' . $pidipas 
+                   . ' - ' . $Extraidos 
+                   . ' Extraidos...'));
 
    }
 
@@ -2208,6 +2565,7 @@ do {
 } while ($Fim <= 0);
 ## Final do Temporizador ##
 
+$Conn = null;
 $conn = null;
 odbc_close_all();
 
@@ -2312,7 +2670,7 @@ function enviaDados($url, $parametros = array()) {
          if (is_object($response) || substr($response, 0, 1) == '{') {
             $json = json_decode($response);
 
-            if ($parametros['pservico'] != 'wfcusu') {
+            if ($parametros['pservico'] != 'wfcusu' && $parametros['pservico'] != 'wfcpas') {
                $arr = objectToArray($json);
 
                $xml_data = new SimpleXMLElement('<GravarResult/>');
@@ -2329,9 +2687,13 @@ function enviaDados($url, $parametros = array()) {
             }
          } else {
             if (substr($response, 0, 1) == '<') {
-               $xml_data = new SimpleXMLElement('<GravarResult/>');
-               array_to_xml($arr, $xml_data);
-               $result = $xml_data->asXML();
+
+               $resp = $response;
+               $resp = str_replace('<?xml version="1.0"?>','',$resp);
+               $resp = str_replace('<ProDataSet xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">','',$resp);
+               $resp = str_replace('</ProDataSet>','',$resp);
+
+               $result = simplexml_load_string($resp);
             } else {
                $result = $response;
             }
@@ -2339,6 +2701,105 @@ function enviaDados($url, $parametros = array()) {
       }
    }
    return $result;
+}
+
+############################################################################
+function Conecta($Type, $Host, $Data, $User=NULL, $Pass=NULL, $Port=NULL) {
+############################################################################
+   /*
+   //--> MySQL
+   $Conn = new PDO("mysql:host=hostname; dbname=nome_banco;", USUARIO, SENHA, $array_opcoes);
+
+   //--> PostgreSQL
+   $Conn = new PDO("pgsql:host=hostname; dbname=nome_banco;", USUARIO, SENHA, $array_opcoes);
+
+   //--> SQL Server
+   // DSN PDO para Windows
+   $Conn = new PDO("sqlsrv:server=hostname; database=nome_banco;", USUARIO, SENHA, $array_opcoes);
+
+   // DSN PDO para Linux
+   $Conn = new PDO("dblib:server=hostname; database=nome_banco;", USUARIO, SENHA, $array_opcoes);
+
+   //--> SQLite
+   // DSN PDO para trabalhar com banco SQLite em memória
+   $Conn = new PDO('sqlite::memory', null, null, $array_opcoes);
+
+   // DSN PDO para trabalhar com banco SQLite em disco
+   $Conn = new PDO("sqlite:caminho_fisco_banco", USUARIO, SENHA, $array_opcoes);
+
+   //--> Oracle
+   $host = 'localhost';
+   $port = '1521';
+   $user = 'root';
+   $pass = 'root';
+   $Conn = new PDO("oci:dbname=//$host:$port",$user,$pass);
+
+   //--> Firebird
+   $Conn = new PDO("firebird:host=hostname; dbname=nome_banco;", USUARIO, SENHA, $array_opcoes);
+
+   //--> Exemplo
+   try {
+   	$Conn = Conecta("Firebird", "localhost", "D:\Clientes\FichaDoCarro\Zavati\ZAVATI-OFICINA.FDB");
+   } catch (Exception $e) {
+   	echo "Erro na Conexao: ", htmlentities($e->getMessage());
+   	die();
+   }
+
+   unset($Conn); //--> encerrando a conexão
+   */
+   
+   switch (strtolower($Type)) {
+      case 'firebird':
+         $DSN = "firebird:dbname=$Host:$Data";
+         if ($User == NULL) $User = "sysdba";
+         if ($Pass == NULL) $Pass = "masterkey";
+      break;
+   }
+   
+   $options  = array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION);
+
+   try {
+   	$pdo = new PDO($DSN, $User, $Pass, $options);
+   } catch (Exception $e) {
+   	$pdo = NULL;
+   	$erro = "Erro na Conexao: " . htmlentities($e->getMessage());
+   	die();
+   }
+
+   return $pdo;
+}
+
+############################################################################
+function Consulta($Conn, $Sql, $Id=NULL, $Type=NULL) {
+############################################################################
+   try {
+      $Result = $Conn->prepare($Sql);
+      $Result->execute();
+   } catch (Exception $e) {
+      salvaLog(array("Erro ao tentar conectar PDO (Ser): " . htmlentities($e->getMessage())));
+      exit;
+   }
+
+   switch (strtolower($Type)) {
+      case 'i': //--> Retorna Array Indices
+         $Return = $Result->fetchAll(PDO::FETCH_NUM); 
+         break;
+      case 'b': //--> Retorna Array Nomes e Indices
+         $Return = $Result->fetchAll(PDO::FETCH_BOTH); 
+         break;
+      case 'j': //--> Retorna StdClass
+         $Return = $Result->fetchAll(PDO::FETCH_OBJ); 
+         break;
+      default:  //--> Retorna Array Nomes
+         $Return = $Result->fetchAll(PDO::FETCH_ASSOC); 
+         break;
+   }
+
+   if ($Id===NULL) {
+      return $Return;
+   } else {
+      return $Return[$Id];
+   }
 }
 
 ############################################################################
@@ -2351,15 +2812,24 @@ function sqlret($tabela,$campos=array(),$condicao=array(),$ordem=array()) {
    switch (TIPO_DB) {
       case 'ACCESS':   $sql .= ""; break;
       case 'DBASE':    $sql .= ""; break;
-      case 'FIREBIRD': $sql .= "FIRST " . $maxregs; break;
+      case 'FIREBIRD': $sql .= "FIRST " . $maxregs .  " "; break;
       case 'FOXPRO':   $sql .= ""; break;
       default:         $sql .= "";
    }
 
    $sql .= (count($campos) > 0 ? campos($campos) : "*") . " "
-         . "FROM " . $tabela
-         . (count($condicao) > 0 ? ' WHERE ' . condicao($condicao) : '')
-         . (count($ordem) > 0 ? ' ORDER BY ' . ordem($ordem) : '');
+         . "FROM " . $tabela;
+   
+   if (count($condicao) > 0) {
+      $sql .= ' WHERE ';
+      if (TIPO_DB == 'ACCESS') {
+         $sql .= '(' . condicao($condicao, $tabela) . ')';
+      } else {
+         $sql .= condicao($condicao, $tabela);
+      }
+   }
+   
+   $sql .= (count($ordem) > 0 ? ' ORDER BY ' . ordem($ordem) : '');
 
    return str_replace("  ", " ", $sql);
 }
@@ -2383,7 +2853,7 @@ function campos($arrCampos = array()) {
 }
 
 ############################################################################
-function condicao($arrCond = array()) {
+function condicao($arrCond = array(), $tabela = '') {
 ############################################################################
    if (!empty($arrCond)) {
       $cond_str = '';
@@ -2394,7 +2864,7 @@ function condicao($arrCond = array()) {
          $o = '';
          $l = '';
 
-         if (TIPO_DB == 'FIREBIRD') {
+         if (TIPO_DB == 'FIREBIRD' || TIPO_DB == 'ACCESS') {
             $cond_str .= "(";
          }
          
@@ -2411,7 +2881,7 @@ function condicao($arrCond = array()) {
             if ($campo == 'Campo' && $t == 'F') {
                $c = $valor;
                continue;
-            }
+            } 
             if ($campo == 'Operador' && $t == 'F') {
                $o = $valor;
                continue;
@@ -2463,7 +2933,8 @@ function condicao($arrCond = array()) {
                      }
                      break;
                   default:
-                     if ($valor !== 0) {
+                     if ($valor !== 0 && $valor !== "") {
+                        //salvaLog(array('03 => ' . $valor));
                         switch ($valor) {
                            case 'var_os':
                            case 'var_codcli':
@@ -2496,7 +2967,19 @@ function condicao($arrCond = array()) {
                                           $cond_str .= intval($valor);
                                        }
                                     } else {
-                                       $cond_str .= '"' . utf8_decode($valor) .'" ';
+                                       if ($t != 'I') {
+                                          if (TIPO_DB == 'ACCESS') {
+                                             if ($valor == 'True' || $valor == 'False') {
+                                                $cond_str .= utf8_decode($valor);
+                                             } else {
+                                                $cond_str .= '"' . utf8_decode($valor) .'" ';
+                                             }
+                                          } else {
+                                             $cond_str .= '"' . utf8_decode($valor) .'" ';
+                                          }
+                                       } else {
+                                          $cond_str .= intval($valor);
+                                       }
                                     }
                                  } else {
                                     $cond_str .= $f."(" . utf8_decode($c) .") ". $o . " " . $valor . " ";
@@ -2518,7 +3001,11 @@ function condicao($arrCond = array()) {
                                     $cond_str .= intval($valor);
                                  }
                               } else {
-                                 $cond_str .= '"' . utf8_decode($valor) .'" ';
+                                 if ($t != 'I') {
+                                    $cond_str .= '"' . utf8_decode($valor) .'" ';
+                                 } else {
+                                    $cond_str .= intval($valor);
+                                 }
                               }
                            } else {
                               $cond_str .= $f."(" . utf8_decode($c) .") ". $o . " " . $valor . " ";
@@ -2530,10 +3017,14 @@ function condicao($arrCond = array()) {
                }
             } else {
                if ($t != 'F') {
-                  if ($campo == 'OpLogico' && TIPO_DB == 'FIREBIRD') {
+                  if ($campo == 'OpLogico' && (TIPO_DB == 'FIREBIRD' || TIPO_DB == 'ACCESS')) {
                      $cond_str = trim($cond_str) . ') ' . utf8_decode($valor) . ' ';
                   } else {
-                     $cond_str .= utf8_decode($valor) . ' ';
+                     if ($campo == 'Campo' && TIPO_DB == 'ACCESS') {
+                        $cond_str .= '(' . $tabela . '.[' . utf8_decode($valor) . ']) ';
+                     } else {
+                        $cond_str .= utf8_decode($valor) . ' ';
+                     }
                   }
                } else {
                   $cond_str .= utf8_decode($valor) . ' ';
@@ -2619,7 +3110,7 @@ function removeAcento($texto) {
    //$txt = mb_convert_encoding($txt, "HTML-ENTITIES", "UTF-8");
    //$txt = html_entity_decode($txt);
 
-   $txt = mungString($txt);
+   $txt = mungString($txt,'U');
 
    $txt = strtr($txt, "áàâãäéèêëíìîïóòôõöúùûüç&", "aaaaaeeeeiiiiooooouuuuce");
    $txt = strtr($txt, "ÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇ&", "AAAAAEEEEIIIIOOOOOUUUUCE");
@@ -2854,7 +3345,6 @@ function change_key($array, $old_key, $new_key) {
    if (!array_key_exists($old_key, $array)) {
       $old_key = strtolower($old_key);
       if (!array_key_exists($old_key, $array)) {
-         //echo '=> N Encontrei ' . $old_key . '<br/>';
          return $array;
       }
    }

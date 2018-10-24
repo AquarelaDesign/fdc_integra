@@ -7,20 +7,28 @@
     "Servidor": "http://siare08.procyon.com.br",
     "Porta": "3125",
     "Servicow": "/cgi-bin/siarewebtt.pl/wficha",
-    "Implantacao": 1,
-    "Saida": "Texto",
-    "RegPorVez": 250,
+    "Implantacao": 0,
+    "Saida": "WS",
+    "RegPorVez": 50,
     "SalvaLogs": "false",
-    "CaminhoLogs": "C:\\xampp5635\\htdocs\\srv\\logs\\",
-    "RegBuscAbertos": 1,
+    "CaminhoLogs": "D:\\xampp56\\htdocs\\srv\\logs\\",
+    "RegBuscAbertos": 10,
     "Periodo": 5,
     "Tempo": 0.1,
+    "TipoConexao":"PDO",
+    "PDO": {
+      "Server":"localhost",
+      "Port":"",
+      "Data":"D:\\Clientes\\FichaDoCarro\\Zavati\\ZAVATI-OFICINA.FDB",
+      "User":"sysdba",
+      "Password":"masterkey"
+    },
     "Proxy": {
       "UsaProxy": "false",
       "ServidorP": "proxy.procyon.com.br",
       "PortaP": "3128",
       "Usuario": "jose",
-      "Senha": "Ze270972"
+      "Senha": "******"
     },
     "Passagens": {
       "Tabela": "OF_ORDEMSERVICO",
@@ -78,7 +86,7 @@
         "descri": "NOME"
       },
       "Condicao": [{
-        "Tipo": "",
+        "Tipo": "S",
         "Funcao": "",
         "Campo": "CODIGO",
         "Operador": "=",
